@@ -1,4 +1,3 @@
-#include<iostream>
 #include"admin.h"
 #include"user.h"
 //组合系统
@@ -10,5 +9,4 @@ class Deal_sys{
     private:
     Admin admin;
     User user;
-    Data data;
 };
