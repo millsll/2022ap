@@ -87,11 +87,13 @@ void User::user_interface(){
             //load buyer data;
             init_buyer(user_id);
             //show buyer funtions
+            buyer_interface();
         }
         else if(option=="2"){
             //load seller data
             init_seller(user_id);
             //show seller functions
+            seller_interface();
         }
         else if (option=="3"){
             //show info function
@@ -104,4 +106,7 @@ void User::user_interface(){
             break;
         }
     }
+}
+void User::user_register(){
+    
 }

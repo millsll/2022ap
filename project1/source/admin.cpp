@@ -21,7 +21,7 @@ void Admin::admin_log_in(){
                 break;//跳出输入循环，离开user login界面
             }
         }
-    }while(flag);
+    }while(!flag);
 
     //登录成功
     if(flag){
@@ -98,4 +98,7 @@ void Admin::admin_interface(){
             break;
         }
     }
+}
+void Admin::init_admin(){
+
 }

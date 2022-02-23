@@ -14,6 +14,7 @@ class Data{
     void load_buyer_data(string user_id);
     void unload_data();
     void load_admin_data();
+    void load_user_info(string user_id);
     private:
     //用户信息数据结构
     struct user_info{
@@ -29,6 +30,7 @@ class Data{
         string user_address;
         //余额
         string user_balance;
+        bool user_state;
         user_info*next;
     }*user_table;
     int users;
