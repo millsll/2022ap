@@ -3,17 +3,17 @@
 using namespace std;
 void User::user_log_in(){
     string in_account,in_password;
-    bool flag=false;
+    int flag=0;
     do{
         cout<<"输入用户账号：";
         cin>>in_account;
         cout<<"输入用户密码：";
         cin>>in_password;
 
-        //查询用户账号密码
+        //查询用户账号密码,并加载用户信息
         flag=match_account(in_account,in_password);
 
-        //匹配错误
+        //匹配错误 flag=0;
         if(!flag){
             string option;
             cout<<"账号或密码错误，要重试吗？(y/n)";
@@ -27,9 +27,13 @@ void User::user_log_in(){
                 break;//跳出输入循环，离开user login界面
             }
         }
+        else if(flag==1){
+            //账号已封禁
+            cout<<"该账号已被封禁，不能登录"<<endl;
+        }
     }while(!flag);
 
-    if(flag){
+    if(flag==2){
         cout<<"登录成功！"<<endl;
         //TODO: laod uer info
         user_id=in_account;

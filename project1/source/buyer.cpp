@@ -2,6 +2,7 @@
 void Buyer::init_buyer(string user_id){
     buyer_id=user_id;
     load_buyer_data(buyer_id);
+    show_data();
 }
 void Buyer::buyer_show_product_list(){
     //generate sql instr
@@ -73,6 +74,7 @@ void Buyer::buyer_interface(){
         }
         else if(option=="6"){
             //back to user interface
+            unload_data();
             break;
         }
     }

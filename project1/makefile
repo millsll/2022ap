@@ -13,3 +13,6 @@ clean:
 	rm -rf ${EXENAME} ${OBJECTS}
 %.o: %.cpp
 	${CC} ${CFLAGS} ${INCLUDES} -c $< -o $@
+PHONY: testsys
+testsys:
+	./test

@@ -8,13 +8,16 @@ class Data{
     public:
     //接受sql指令并分析
     bool get_sql(string sql_instr);
-    bool match_account(string account,string password);
+    int match_account(string account,string password);
     void init_user_info(string user_id);
     void load_seller_data(string uer_id);
     void load_buyer_data(string user_id);
     void unload_data();
     void load_admin_data();
     void load_user_info(string user_id);
+    void show_data();
+    Data();
+    ~Data();
     private:
     //用户信息数据结构
     struct user_info{
@@ -70,6 +73,8 @@ class Data{
     int orders;
     //充值记录数据结构
     int charges;
+    enum state_type{admin,seller,buyer,unlog};
+    state_type sys_state;
 };
 
 

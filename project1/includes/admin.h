@@ -15,5 +15,6 @@ class Admin: public Data
     void admin_show_history_orders();
     void admin_show_users_list();
     void admin_block_user();
+    //using Data::Data;
     private:
 };
