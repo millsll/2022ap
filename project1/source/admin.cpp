@@ -100,7 +100,8 @@ void Admin::admin_interface(){
     }
 }
 void Admin::init_admin(){
-    load_admin_data();
+    load_data();
+    change_state(1);
     //cout<<"load success"<<endl;
     //show_data();
 }

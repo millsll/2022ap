@@ -37,6 +37,7 @@ void User::user_log_in(){
         cout<<"登录成功！"<<endl;
         //TODO: laod uer info
         user_id=in_account;
+        load_user_data(user_id);
         //进入主界面
         user_interface();
     }

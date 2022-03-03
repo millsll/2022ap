@@ -44,6 +44,27 @@ Data::~Data(){
     users=0;
     sys_state=unlog;
 }
+void Data::change_state(int state){
+    switch (state)
+    {
+    case 1:
+        sys_state=admin;
+        break;
+    case 2:
+        sys_state=seller;
+        break;
+    case 3:
+        sys_state=buyer;
+        break;
+    case 4:
+        sys_state=unlog;
+        break;
+    default:
+        cout<<"unkown state"<<endl;
+        exit(-1);
+        break;
+    }
+}
 bool Data::get_sql(string sql_instr){
     istringstream in(sql_instr);
     string instrs[20];
@@ -60,28 +81,41 @@ bool Data::get_sql(string sql_instr){
         //get colums
         string colums[10];
         int tmpcnt=0;
-        while(instrs[i]!="FROM"){
+        while(instrs[i]!="FROM"&&i<cnt){
             colums[tmpcnt]=instrs[i];
             i++;
             tmpcnt++;
         }
-        //jump from
+        //jump "from"
         i++;
         //get tablename
         string tablename=instrs[i];
         //get conditon if exist
-        if(i!=cnt){
-            
+        if(i<cnt){
+            int con_cnt=0;
+            string conditions[10];
+            while(instrs[i]!="AND"&&i<cnt){
+                //TODO:
+            }
+        }
+        else{
+            deal_select(tablename);
         }
     }
     else if(instrs[0]=="INSERT"){
-
+        string tablename=instrs[2];
+        string values=instrs[3];
+        deal_insert(tablename,values);
+        
     }
     else if(instrs[0]=="UPDATE"){
-
+        //tmp empty
     }
     else if(instrs[0]=="DELETE"){
-        
+        string tablename=instrs[2];
+        string colum=instrs[4];
+        string value=instrs[6];
+        deal_delete(tablename,colum,value);
     }
     return false;
 }
@@ -170,6 +204,132 @@ void Data::unload_data(){
     orders=0;
     users=0;
     sys_state=unlog;
+}
+void Data::load_data(){
+     fstream commodity_f;
+    commodity_f.open("./data/commodity.txt",ios::in);
+    if(!commodity_f){
+        cout<<"open commodity.txt failed"<<endl;
+        exit(-1);
+    }
+    string file_line;
+    commodity_f>>file_line;
+    product_info*tail=NULL;
+    while(!commodity_f.eof()){
+         //get line from file
+        commodity_f>>file_line;
+        //split with ","
+        if(file_line!=""){
+            istringstream in(file_line);
+            string item[8];
+            string tmp;
+            int i=0;
+            while(getline(in,tmp,',')){
+                item[i]=tmp;
+                i++;
+            }
+            product_info*p=new product_info;
+            p->next=NULL;
+            p->product_ID=item[0];
+            p->product_name=item[1];
+            p->price=atof(item[2].c_str());
+            p->quantity=atoi(item[3].c_str());
+            p->discription=item[4];
+            p->seller_ID=item[5];
+            p->time=item[6];
+            if(item[7]=="销售中")
+                p->product_state=1;
+            else if(item[7]=="已下架")
+                p->product_state=0;
+            else{
+                cout<<"商品状态信息错误"<<endl;
+                exit(-1);
+            }
+            if(product_table==NULL)product_table=p;
+            else tail->next=p;
+            tail=p;
+        }
+    }
+    commodity_f.close();
+    cout<<"load product success"<<endl;
+    fstream orders_f;
+    orders_f.open("./data/order.txt",ios::in);
+    if(!orders_f){
+        cout<<"open order.txt failed"<<endl;
+        exit(-1);
+    }
+    order_info*tail2=NULL;
+    orders_f>>file_line;
+    while(!orders_f.eof()){
+        orders_f>>file_line;
+        if(file_line!=""){
+            stringstream in(file_line);
+            string item[7];
+            string tmp;
+            int i=0;
+            while(getline(in,tmp,',')){
+                item[i]=tmp;
+                i++;
+            }
+            order_info*p=new order_info;
+            p->next=NULL;
+            p->order_ID=item[0];
+            p->product_ID=item[1];
+            p->price=atof(item[2].c_str());
+            p->quantity=atoi(item[3].c_str());
+            p->deal_time=item[4];
+            p->seller_ID=item[5];
+            p->buyer_ID=item[6];
+            if(order_table==NULL)order_table=p;
+            else tail2->next=p;
+            tail2=p;
+        }
+    }
+    orders_f.close();
+    fstream users_f;
+    users_f.open("./data/user.txt",ios::in);
+    if(!users_f){
+        cout<<"open user.txt failed"<<endl;
+        exit(-1);
+    }
+    users_f>>file_line;
+    user_info*tail3=NULL;
+    while(!users_f.eof()){
+        users_f>>file_line;
+        if(file_line!=""){
+            stringstream in(file_line);
+            string item[7];
+            string tmp;
+            int i=0;
+            while(getline(in,tmp,',')){
+                item[i]=tmp;
+                i++;
+            }
+            user_info*p=new user_info;
+            p->next=NULL;
+            p->user_ID=item[0];
+            p->user_name=item[1];
+            p->user_password=item[2];
+            p->user_phonenumber=item[3];
+            p->user_address=item[4];
+            p->user_balance=item[5];
+            if(item[6]=="正常")p->user_state=1;
+            else if(item[6]=="封禁")p->user_state=0;
+            else{
+                cout<<item[6]<<endl;
+                cout<<"用户状态信息异常"<<endl;
+                exit(-1);
+            }
+            if(user_table==NULL)user_table=p;
+            else tail3->next=p;
+            tail3=p;
+        }
+    }
+    users_f.close();
+}
+void Data::load_user_data(string user_id){
+    data_user_id==user_id;
+    load_data();
 }
 void Data::load_seller_data(string user_id){
     sys_state=seller;
@@ -491,4 +651,43 @@ void Data::show_data(){
         cout<<p3->user_ID<<'\t'<<p3->user_name<<endl;
         p3=p3->next;
     }
+}
+bool Data::deal_select(string table){
+    if(sys_state==admin){
+        //show all information
+        if(table=="commodity"){
+
+        }
+        else if(table=="order"){
+
+        }
+        else if(table=="user"){
+
+        }
+    }
+    else if(sys_state==seller){
+        if(table=="commodity"){
+
+        }
+        else if(table=="order"){
+
+        }
+    }
+    else if(sys_state==buyer){
+        if(table=="commodity"){
+
+        }
+        else if(table=="order"){
+            
+        }
+    }
+}
+bool Data::deal_select(string table,string condition){
+
+}
+bool Data::deal_delete(string table, string colum, string value){
+
+}
+bool Data::deal_insert(string table,string values){
+
 }

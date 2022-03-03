@@ -1,8 +1,7 @@
 #include"../includes/seller.h"
 void Seller::init_seller(string user_id){
     seller_id=user_id;
-    
-    load_seller_data(seller_id);
+    change_state(2);
     show_data();
 }
 void Seller::seller_post_product(){

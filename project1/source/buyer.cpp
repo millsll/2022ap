@@ -1,7 +1,7 @@
 #include"../includes/buyer.h"
 void Buyer::init_buyer(string user_id){
     buyer_id=user_id;
-    load_buyer_data(buyer_id);
+    change_state(3);
     show_data();
 }
 void Buyer::buyer_show_product_list(){
