@@ -39,6 +39,7 @@ void User::user_log_in(){
         user_id=in_account;
         load_user_data(user_id);
         //进入主界面
+        cout<<"加载成功"<<endl;
         user_interface();
     }
     //

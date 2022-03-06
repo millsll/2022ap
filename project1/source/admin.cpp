@@ -50,8 +50,10 @@ void Admin::admin_remove_product(){
     string product_id;
     cout<<"输入商品ID:";
     cin>>product_id;
-    string instr="DELETE * FROM commodity WHERE ID CONTAINS "+product_id;
+    string instr="UPDATE commodity SET 商品状态 = 已下架 WHERE 商品ID = "+product_id;
+    cout<<"instr:"<<instr;
     get_sql(instr);
+    show_data();
 }
 void Admin::admin_show_history_orders(){
     string instr="SELECT * FROM order";
@@ -62,12 +64,26 @@ void Admin::admin_show_users_list(){
     get_sql(instr);
 }
 void Admin::admin_block_user(){
-    
+    //更改用户状态并下架用户商品
+    string block_user_ID;
+    cout<<"请输入要封禁的用户ID:";
+    cin>>block_user_ID;
+    cout<<"确认要封禁该用户吗？(y/n)"<<endl;
+    string option;
+    cin>>option;
+    if(option=="y"){
+        string commodity_sql_instr="UPDATE commodity SET 商品状态 = 已下架 WHERE 卖家ID = "+block_user_ID;
+        string user_sql_instr="UPDATE user SET 用户状态 = 封禁 WHERE 用户ID = "+block_user_ID;
+        get_sql(commodity_sql_instr);
+        get_sql(user_sql_instr);
+        show_data();
+    }
+
 }
 void Admin::admin_interface(){
     while(1){
         cout<<"请选择功能："<<endl;
-        cout<<"1.查看所有商品 2.搜索商品 3.下架商品 4.查看所有订单 5.查看所有用户 6.封禁用户 7.注销";
+        cout<<"1.查看所有商品 2.搜索商品 3.下架商品 4.查看所有订单 5.查看所有用户 6.封禁用户 7.注销"<<endl;
         string option;
         do{
             cin>>option;
@@ -101,6 +117,7 @@ void Admin::admin_interface(){
 }
 void Admin::init_admin(){
     load_data();
+    show_data();
     change_state(1);
     //cout<<"load success"<<endl;
     //show_data();

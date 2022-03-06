@@ -6,7 +6,7 @@ void Buyer::init_buyer(string user_id){
 }
 void Buyer::buyer_show_product_list(){
     //generate sql instr
-    string instr="SELECT * FROM commodity";
+    string instr="SELECT * FROM commodity WHERE 商品状态 = 销售中";
     //send to data
     get_sql(instr);
 }
@@ -20,7 +20,7 @@ void Buyer::buyer_search_product(){
     }
 }
 void Buyer::buyer_history_orders(){
-    string instr="SELECT * FROM order";
+    string instr="SELECT * FROM order WHERE 买家ID = "+buyer_id;
     if(!get_sql(instr)){
         cout<<"没有历史订单"<<endl;
     }

@@ -66,6 +66,7 @@ void Data::change_state(int state){
     }
 }
 bool Data::get_sql(string sql_instr){
+    cout<<sql_instr<<endl;
     istringstream in(sql_instr);
     string instrs[20];
     string tmp;
@@ -75,6 +76,7 @@ bool Data::get_sql(string sql_instr){
         instrs[cnt]=tmp;
         cnt++;
     }
+    for(int i=0;i<cnt;i++)cout<<instrs[i]<<endl;
     //analsys
     int i=1;
     if(instrs[0]=="SELECT"){
@@ -90,13 +92,15 @@ bool Data::get_sql(string sql_instr){
         i++;
         //get tablename
         string tablename=instrs[i];
+
         //get conditon if exist
-        if(i<cnt){
-            int con_cnt=0;
-            string conditions[10];
-            while(instrs[i]!="AND"&&i<cnt){
-                //TODO:
-            }
+        if(i<cnt-1){
+            bool flag;
+            if(instrs[4]=="WHERE")flag=0;
+            else if(instrs[4]=="CONTAINS")flag=1;
+            string condition_colum=instrs[5];
+            string condition_value=instrs[7];
+            deal_select(tablename,condition_colum,condition_value,flag);
         }
         else{
             deal_select(tablename);
@@ -109,7 +113,16 @@ bool Data::get_sql(string sql_instr){
         
     }
     else if(instrs[0]=="UPDATE"){
-        //tmp empty
+        string tablename=instrs[1];
+        //index 2: SET
+        //index 3~5: changes:
+        string change_colum=instrs[3];
+        string change_value=instrs[5];
+        //index 6:WHERE
+        //index 7~9:condition, suppose equal
+        string condition_colum=instrs[7];
+        string condition_value=instrs[9];
+        deal_update(tablename,condition_colum,condition_value,change_colum,change_value);
     }
     else if(instrs[0]=="DELETE"){
         string tablename=instrs[2];
@@ -163,7 +176,7 @@ int Data::match_account(string account, string password){
                             cout<<"用户状态信息异常"<<endl;
                             exit(-1);
                         }
-                        user_table=p;
+                        //user_table=p;
                     }
                 }
             }
@@ -286,7 +299,10 @@ void Data::load_data(){
         }
     }
     orders_f.close();
+    cout<<"load order succ"<<endl;
     fstream users_f;
+    if(user_table)cout<<"not null"<<endl;
+    else cout<<"null"<<endl;
     users_f.open("./data/user.txt",ios::in);
     if(!users_f){
         cout<<"open user.txt failed"<<endl;
@@ -296,6 +312,7 @@ void Data::load_data(){
     user_info*tail3=NULL;
     while(!users_f.eof()){
         users_f>>file_line;
+        cout<<file_line<<endl;
         if(file_line!=""){
             stringstream in(file_line);
             string item[7];
@@ -648,21 +665,56 @@ void Data::show_data(){
     user_info*p3=user_table;
     cout<<"user:"<<endl;
     while(p3){
-        cout<<p3->user_ID<<'\t'<<p3->user_name<<endl;
+        cout<<p3->user_ID<<'\t'<<p3->user_name<<'\t'<<p3->user_state<<endl;
         p3=p3->next;
     }
 }
 bool Data::deal_select(string table){
+    cout<<"start deal select"<<endl;
     if(sys_state==admin){
         //show all information
         if(table=="commodity"){
-
+            if(product_table){
+                cout<<"商品ID\t名称\t价格\t上架时间\t卖家ID\t数量\t商品状态\n";
+                product_info*p=product_table;
+                while(p){
+                    cout<<p->product_ID<<'\t'<<p->product_name<<'\t'<<p->price<<'\t'<<p->time<<'\t'<<p->seller_ID<<'\t'<<p->quantity<<'\t';
+                    if(p->product_state)cout<<"销售中"<<endl;
+                    else cout<<"已下架"<<endl;
+                    p=p->next;
+                }
+            }
+            else{
+                cout<<"暂无商品"<<endl;
+            }
         }
         else if(table=="order"){
-
+            if(order_table){
+                cout<<"订单ID\t商品ID\t交易单价\t数量\t交易时间\t卖家ID\t买家ID\n";
+                order_info*p=order_table;
+                while(p){
+                    cout<<p->order_ID<<'\t'<<p->product_ID<<'\t'<<p->price<<"\t\t"<<p->quantity<<'\t'<<p->deal_time<<'\t'<<p->seller_ID<<'\t'<<p->buyer_ID<<endl;
+                    p=p->next;
+                }
+            }
+            else{
+                cout<<"暂无订单"<<endl;
+            }
         }
         else if(table=="user"){
-
+            if(user_table){
+                cout<<"用户ID\t用户名\t联系方式\t地址\t\t钱包余额\t用户状态\n";
+                user_info*p=user_table;
+                while(p){
+                    cout<<p->user_ID<<'\t'<<p->user_name<<'\t'<<p->user_phonenumber<<'\t'<<p->user_address<<"\t\t"<<p->user_balance<<'\t';
+                    if(p->user_state)cout<<"正常"<<endl;
+                    else cout<<"封禁"<<endl;
+                    p=p->next;
+                }
+            }
+            else {
+                cout<<"暂无用户"<<endl;
+            }
         }
     }
     else if(sys_state==seller){
@@ -678,16 +730,193 @@ bool Data::deal_select(string table){
 
         }
         else if(table=="order"){
-            
+
         }
     }
+    return false;
 }
 bool Data::deal_select(string table,string condition){
-
+    return false;
 }
 bool Data::deal_delete(string table, string colum, string value){
-
+    return false;
 }
 bool Data::deal_insert(string table,string values){
+    return false;
+}
+bool Data::cmp_condition(user_info* p,string condition_c,string condition_v){
+    if(condition_c=="用户ID"){
+        return p->user_ID==condition_v;
+    }
+    return false;
+
+}
+bool Data::cmp_condition(product_info*p,string condition_c,string condition_v){
+    if(condition_c=="卖家ID"){
+        return p->seller_ID==condition_v;
+    }
+    else if(condition_c=="商品ID"){
+        return p->product_ID==condition_v;
+    }
+    return false;
+}
+bool Data::cmp_condition(order_info*p,string condition_c,string condition_v){
+    if(condition_c=="卖家ID"){
+        return p->seller_ID==condition_v;
+    }
+    return false;
+}
+void Data::change_value(user_info*p,string change_c,string change_v){
+    if(change_c=="用户状态"){
+        if(change_v=="封禁"){p->user_state=0; return;}
+    }
+}
+void Data::change_value(product_info*p,string change_c,string change_v){
+    if(change_c=="商品状态"){
+        if(change_v=="已下架"){
+            p->product_state=0;
+            return;
+        }
+        return;
+    }
+}
+bool Data::deal_update(string table,string condition_c,string condition_v,string change_c,string change_v){
+    cout<<"start deal update"<<endl;
+    cout<<condition_c<<'\t'<<condition_v<<endl;
+    cout<<change_c<<'\t'<<change_v<<endl;
+    if(table=="user"){
+        if(user_table){
+            user_info*p=user_table;
+            while(p){
+                if(cmp_condition(p,condition_c,condition_v)){
+                    change_value(p,change_c,change_v);
+                }
+                p=p->next;
+            }
+        }
+    }
+    else if(table=="commodity"){
+        if(product_table){
+            product_info*p=product_table;
+            while(p){
+                if(cmp_condition(p,condition_c,condition_v)){
+                    change_value(p,change_c,change_v);
+                }
+                p=p->next;
+            }
+        }
+    }
+    return false;
+}
+bool Data::contain_condition(product_info*p,string condition_c,string condition_v){
+    if(condition_c=="名称"){
+        if(p->product_name.find(condition_v)==string::npos)return false;
+        else return true;
+    }
+    return  false;
+}
+bool Data::contain_condition(order_info*p,string condition_c,string condition_v){
+    if(condition_c=="卖家ID"){
+        if(p->seller_ID.find(condition_v))return false;
+        else return true;
+    }
+    return false;
+}
+bool Data::deal_select(string table,string condition_c,string condition_v,bool condition){
+    if(table=="commodity"){
+        if(product_table){
+            //判断是否有
+            bool flag=false;
+            product_info*p=product_table;
+            while(p){
+                if(condition){
+                    if(contain_condition(p,condition_c,condition_v)){
+                        flag=true;
+                        break;
+                    }
+                }
+                else{
+                    if(cmp_condition(p,condition_c,condition_v)){
+                        flag=true;
+                        break;
+                    }
+                }
+                p=p->next;
+            }
+            //输出结果
+            p=product_table;
+            if(flag){
+                cout<<"商品ID\t名称\t价格\t上架时间\t";
+                if(condition_c!="卖家ID")cout<<"卖家ID\t";
+                cout<<"数量\t商品状态"<<endl;
+                while(p){
+                    if(condition){
+                        if(contain_condition(p,condition_c,condition_v)){
+                            cout<<p->product_ID<<'\t'<<p->product_name<<'\t'<<p->price<<'\t'<<p->time<<'\t'<<p->seller_ID<<'\t'<<p->quantity<<'\t';
+                            if(p->product_state)cout<<"销售中"<<endl;
+                            else cout<<"已下架"<<endl;
+                    }
+                    }
+                    else{
+                        if(cmp_condition(p,condition_c,condition_v)){
+                            cout<<p->product_ID<<'\t'<<p->product_name<<'\t'<<p->price<<'\t'<<p->time<<'\t';
+                            if(condition_c!="卖家ID")cout<<p->seller_ID<<'\t';
+                            cout<<p->quantity<<'\t';
+                            if(p->product_state)cout<<"销售中"<<endl;
+                            else cout<<"已下架"<<endl;
+                        }
+                    }
+                    p=p->next;
+                }
+            }
+            else{
+
+            }
+        }
+    }
+    else if(table=="order"){
+        if(order_table){
+            //判断是否存在
+            bool flag=false;
+            order_info*p=order_table;
+            while(p){
+                if(condition){
+                    if(contain_condition(p,condition_c,condition_v)){
+                        flag=true;
+                        break;
+                    }
+                }
+                else{
+                    if(cmp_condition(p,condition_c,condition_v)){
+                        flag=true;
+                        break;
+                    }
+                }
+            }
+            //输出结果
+            p=order_table;
+            if(flag){
+                cout<<"订单ID\t商品ID\t交易单价\t数量\t交易时间\t";
+                if(condition_c!="卖家ID")cout<<"卖家ID\t";
+                cout<<"买家ID"<<endl;
+                while(p){
+                    if(condition){
+
+                    }
+                    else{
+                        if(cmp_condition(p,condition_c,condition_v)){
+                            cout<<p->order_ID<<'\t'<<p->product_ID<<'\t'<<p->price<<'\t'<<p->quantity<<'\t'<<p->deal_time<<'\t';
+                            if(condition_c!="卖家ID")cout<<p->seller_ID<<'\t';
+                            cout<<p->buyer_ID<<endl;
+                        }
+                    }
+                    p=p->next;
+                }
+            }
+        }
+    }
+    return false;
+}
+void Data::write_back(){
 
 }

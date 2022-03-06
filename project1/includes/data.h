@@ -24,7 +24,8 @@ class Data{
     bool deal_select(string table,string condition);
     bool deal_delete(string table,string colum,string value);
     bool deal_insert(string table,string values);
-
+    bool deal_update(string table,string condition_c,string condition_v,string change_c,string change_v);
+    void write_back();
     Data();
     ~Data();
     private:
@@ -85,6 +86,15 @@ class Data{
     int charges;
     enum state_type{admin,seller,buyer,unlog};
     state_type sys_state;
+    bool cmp_condition(user_info*p,string condition_c,string condition_v);
+    bool cmp_condition(product_info*p,string condition_c,string condition_v);
+    bool cmp_condition(order_info*p,string condition_c,string condition_v);
+    void change_value(product_info*p,string change_c,string change_v);
+    void change_value(user_info*p,string change_c,string change_v);
+    bool deal_select(string table,string condition_c,string condition_v,bool condition);
+    bool contain_condition(product_info*p,string condition_c,string condition_v);
+    bool contain_condition(order_info*p,string condition_c,string condition_v);
+
 };
 
 
