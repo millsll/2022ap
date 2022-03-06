@@ -6,6 +6,7 @@ void Seller::init_seller(string user_id){
 }
 void Seller::seller_post_product(){
     string instr="INSERT INTO commodity VALUES";
+    
     string p_name,p_price,p_quantity,p_discription;
     cout<<"请输入商品名称：";
     cin>>p_name;
@@ -16,6 +17,25 @@ void Seller::seller_post_product(){
     cout<<"请输入商品描述：";
     cin>>p_discription;
     cout<<"请确认发布商品信息无误："<<endl;
+    cout<<"商品名称："<<p_name;
+    cout<<"商品价格："<<p_price;
+    cout<<"商品数量："<<p_quantity;
+    cout<<"商品描述："<<p_discription;
+    cout<<"你确认要发布商品吗？(y/n)";
+    string option;
+    do{
+        cin>>option;
+        if(option!="y"&&option!="Y"&&option!="n"&&option!="N"){
+            cout<<"选项错误，请重新选择：";
+        }
+    }while(option!="Y"&&option!="y"&&option!="N"&&option!="n");
+    if(option=="Y"||option=="y"){
+        instr=instr+" ("+p_name+","+p_price+","+p_quantity+","+p_discription+")";
+        get_sql(instr);
+    }
+    else{
+        cout<<"返回上一级"<<endl;
+    }
 }
 void Seller::seller_show_product_list(){
     string instr="SELECT * FROM commodity WHERE 卖家ID = "+ seller_id;

@@ -94,7 +94,7 @@ class Data{
     bool deal_select(string table,string condition_c,string condition_v,bool condition);
     bool contain_condition(product_info*p,string condition_c,string condition_v);
     bool contain_condition(order_info*p,string condition_c,string condition_v);
-
+    void insert_newdata(product_info*p);
 };
 
 

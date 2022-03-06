@@ -74,7 +74,7 @@ void Buyer::buyer_interface(){
         }
         else if(option=="6"){
             //back to user interface
-            unload_data();
+            //unload_data();
             break;
         }
     }
