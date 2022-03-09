@@ -2,7 +2,7 @@
 #include"buyer.h"
 #include"caculator.h"
 //用户功能,继承卖家买家
-class User: public Seller,public Buyer,public Caculator
+class User: private Seller,private Buyer
 {
     public:
     //用户登录

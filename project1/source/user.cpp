@@ -63,6 +63,8 @@ void User::user_info_function(){
 
         if(option=="1"){
             //seach user_info
+            string instr="SELECT * FROM user WHERE 用户ID = "+user_id;
+            get_sql(instr);
         }
         else if(option=="2"){
             //update user_info
@@ -114,5 +116,35 @@ void User::user_interface(){
     }
 }
 void User::user_register(){
-    
+    load_data();
+    string user_id_pre="U";
+    string uid=to_string(users+1);
+    for(int i=0;i<int(3-uid.length());i++){
+        user_id_pre+="0";
+    }
+    string new_uid=user_id_pre+uid;
+    cout<<"你的账号是："<<new_uid<<endl;
+    cout<<"请设置你的用户名："<<endl;
+    string user_name;
+    cin>>user_name;
+    cout<<"请填写你的联系方式：";
+    string phone;
+    cin>>phone;
+    cout<<"请填写你的地址：";
+    string address;
+    cin>>address;
+    cout<<"请设置密码：";
+    string passwd1;
+    cin>>passwd1;
+    cout<<"再次输入密码：";
+    string passwd2;
+    cin>>passwd2;
+    if(passwd1==passwd2){
+        string instr="INSERT INTO user VALUES ("+new_uid+","+user_name+","+passwd1+","+phone+","+address+")";
+        get_sql(instr);
+        show_data();
+    }
+    else{
+
+    }
 }

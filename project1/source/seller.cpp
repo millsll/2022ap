@@ -49,7 +49,59 @@ void Seller::seller_remove_product(){
     get_sql(instr);
 }
 void Seller::seller_change_product(){
-
+    string p_id,option;
+    cout<<"输入要修改的商品编号："<<endl;
+    cin>>p_id;
+    cout<<"选择想要修改的商品属性（1.价格 2.描述 3.数量）：";
+    do{
+        cin>>option;
+        if(option!="1"&&option!="2"&&option!="3"){
+            cout<<"选项错误，请重新选择：";
+        }
+    }while(option!="1"&&option!="2"&&option!="3");
+    if(option=="1"){
+        cout<<"请输入修改后的商品价格：";
+        string price;
+        cin>>price;
+        cout<<"请确认修改后的商品信息无误："<<endl;
+        Data::product_info*p=get_commodity(p_id);
+        cout<<"商品ID："<<p->product_ID<<endl;
+        cout<<"商品名称："<<p->product_name<<endl;
+        cout<<"商品价格："<<price;
+        cout<<"商品描述："<<p->discription<<endl;
+        string instr="UPDATE commodity SET 价格 = "+price+" WHERE 商品ID = "+p_id;
+        get_sql(instr);
+    }
+    else if(option=="2"){
+        cout<<"请输入修改后的商品你描述：";
+        string discription;
+        cin>>discription;
+        cout<<"请确认修改后的商品属性："<<endl;
+        Data::product_info*p=get_commodity(p_id);
+        cout<<"商品ID："<<p->product_ID<<endl;
+        cout<<"商品名称："<<p->product_name<<endl;
+        cout<<"商品价格：";
+        printf("%.1f\n",p->price);
+        cout<<"商品描述："<<discription<<endl;
+        string instr="UPDATE commodity SET 描述 = "+discription+" WHERE 商品ID = "+p_id;
+        get_sql(instr);
+    }
+    else if(option=="3"){
+        cout<<"请输入修改后的商品数量：";
+        string quantity;
+        cin>>quantity;
+        cout<<"请确认修改后的商品属性："<<endl;
+        Data::product_info*p=get_commodity(p_id);
+        cout<<"商品ID："<<p->product_ID<<endl;
+        cout<<"商品名称："<<p->product_name<<endl;
+        cout<<"商品价格：";
+        printf("%.1f\n",p->price);
+        cout<<"商品数量："<<p->quantity<<endl;
+        cout<<"商品描述："<<p->discription<<endl;
+        string instr="UPDATE commodity SET 数量 = "+quantity+" WHERE 商品ID = "+p_id;
+        get_sql(instr);
+    }
+    show_data();
 }
 void Seller::seller_history_order(){
     string instr="SELECT * FROM order WHERE 卖家ID = "+seller_id;
