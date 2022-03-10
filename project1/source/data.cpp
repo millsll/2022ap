@@ -1123,7 +1123,8 @@ bool Data::deal_select(string table,string condition_c,string condition_v,bool c
                         cout<<"地址："<<p->user_address<<endl;
                         //计算余额
                         //获取充值记录
-                        generate_expression(condition_v);
+                        string exp=generate_expression(condition_v);
+                        trans(exp);
                         //获取出售金额
                         //获取购买金额
                     }
