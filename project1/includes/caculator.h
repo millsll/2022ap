@@ -7,12 +7,14 @@ using namespace std;
 class Caculator
 {
     public:
-    void trans(string exp);
+    float figure_exp(string exp);
+    
     private:
     stack<string>S;
     stack<string>F;
     vector<string>R;
     void add_element(string e);
     float figure();
+    void trans(string exp);
 };
 #endif

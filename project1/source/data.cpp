@@ -12,7 +12,6 @@ Data::Data(){
     products=0;
     orders=0;
     users=0;
-    sys_state=unlog;
 }
 Data::~Data(){
     if(product_table){
@@ -45,31 +44,9 @@ Data::~Data(){
     products=0;
     orders=0;
     users=0;
-    sys_state=unlog;
-}
-void Data::change_state(int state){
-    switch (state)
-    {
-    case 1:
-        sys_state=admin;
-        break;
-    case 2:
-        sys_state=seller;
-        break;
-    case 3:
-        sys_state=buyer;
-        break;
-    case 4:
-        sys_state=unlog;
-        break;
-    default:
-        cout<<"unkown state"<<endl;
-        exit(-1);
-        break;
-    }
 }
 bool Data::get_sql(string sql_instr){
-    cout<<sql_instr<<endl;
+    //cout<<sql_instr<<endl;
     istringstream in(sql_instr);
     string instrs[20];
     string tmp;
@@ -79,7 +56,7 @@ bool Data::get_sql(string sql_instr){
         instrs[cnt]=tmp;
         cnt++;
     }
-    for(int i=0;i<cnt;i++)cout<<instrs[i]<<endl;
+    //for(int i=0;i<cnt;i++)cout<<instrs[i]<<endl;
     //analsys
     int i=1;
     if(instrs[0]=="SELECT"){
@@ -112,7 +89,7 @@ bool Data::get_sql(string sql_instr){
     else if(instrs[0]=="INSERT"){
         string tablename=instrs[2];
         string values=instrs[4];
-        cout<<values<<endl;
+        //cout<<values<<endl;
         deal_insert(tablename,values);
         
     }
@@ -221,7 +198,6 @@ void Data::unload_data(){
     products=0;
     orders=0;
     users=0;
-    sys_state=unlog;
 }
 void Data::load_charge(){
     fstream charge_f;
@@ -232,11 +208,11 @@ void Data::load_charge(){
     }
     string file_line;
     charge_f>>file_line;
-    cout<<file_line<<endl;
+    //cout<<file_line<<endl;
     charge_info*tail=NULL;
     while(!charge_f.eof()){
         charge_f>>file_line;
-        cout<<file_line<<endl;
+        //cout<<file_line<<endl;
         charges++;
         if(file_line!=""){
             istringstream in(file_line);
@@ -245,7 +221,7 @@ void Data::load_charge(){
             int i=0;
             while(getline(in,tmp,',')){
                 item[i]=tmp;
-                cout<<item[i]<<endl;
+                //cout<<item[i]<<endl;
                 i++;
             }
             charge_info*p=new charge_info;
@@ -253,8 +229,8 @@ void Data::load_charge(){
             p->charge_time=item[3];
             p->charge_user_id=item[1];
             p->charge_value=stoi(item[2].c_str());
-            cout<<"init a new log"<<endl;
-            if(charge_table==NULL){cout<<"init nullptr"<<endl;charge_table=p;cout<<"load first"<<endl;}
+            //cout<<"init a new log"<<endl;
+            if(charge_table==NULL){charge_table=p;}
             else tail->next=p;
             tail=p;
         }
@@ -312,7 +288,7 @@ void Data::load_data(){
         }
     }
     commodity_f.close();
-    cout<<"load product success"<<endl;
+    //cout<<"load product success"<<endl;
     fstream orders_f;
     orders_f.open("./data/order.txt",ios::in);
     if(!orders_f){
@@ -348,7 +324,7 @@ void Data::load_data(){
         }
     }
     orders_f.close();
-    cout<<"load order succ"<<endl;
+    //cout<<"load order succ"<<endl;
     fstream users_f;
     //if(user_table)cout<<"not null"<<endl;
     //else cout<<"null"<<endl;
@@ -399,307 +375,9 @@ void Data::load_user_data(string user_id){
     load_data();
     load_charge();
 }
-void Data::load_seller_data(string user_id){
-    sys_state=seller;
-    //load seller product
-    fstream commodity_f;
-    commodity_f.open("./data/commodity.txt",ios::in);
-    if(!commodity_f){
-        cout<<"open commodity.txt failed"<<endl;
-        exit(-1);
-    }
-    string file_line;
-    commodity_f>>file_line;
-    product_info* tail=NULL;
-    while(!commodity_f.eof()){
-        //get line from file
-        commodity_f>>file_line;
-        //split with ","
-        if(file_line!=""){
-            istringstream in(file_line);
-            string item[8];
-            string tmp;
-            int i=0;
-            while(getline(in,tmp,',')){
-                item[i]=tmp;
-                i++;
-            }
-            //if seller is the user load the product 
-            if(item[5]!=user_id){
-                product_info*p=new product_info;
-                p->next=NULL;
-                p->product_ID=item[0];
-                p->product_name=item[1];
-                p->price=atof(item[2].c_str());
-                p->quantity=atoi(item[3].c_str());
-                p->discription=item[4];
-                p->seller_ID=item[5];
-                p->time=item[6];
-                if(item[7]=="销售中")
-                    p->product_state=1;
-                else if(item[7]=="已下架")
-                    p->product_state=0;
-                else{
-                    cout<<"商品状态信息错误"<<endl;
-                    exit(-1);
-                }
-                //插入商品表
-                if(product_table==NULL)product_table=p;
-                else tail->next=p;
-                tail=p;
-            }
-            
-        }
-    }
-    commodity_f.close();
-    //load seller orders
-    fstream orders_f;
-    orders_f.open("./data/order.txt",ios::in);
-    if(!orders_f){
-        cout<<"open order.txt failed"<<endl;
-        exit(-1);
-    }
-    //string file_line;
-    orders_f>>file_line;
-    order_info* tail2=NULL;
-    while(!orders_f.eof()){
-        //getline from file
-        orders_f>>file_line;
-        if(file_line!=""){
-            istringstream in(file_line);
-            string item[7];
-            string tmp;
-            int i=0;
-            while(getline(in,tmp,',')){
-                item[i]=tmp;
-                i++;
-            }
-            if(item[5]==user_id){
-                order_info*p=new order_info;
-                p->next=NULL;
-                p->order_ID=item[0];
-                p->product_ID=item[1];
-                p->price=atof(item[2].c_str());
-                p->quantity=atoi(item[3].c_str());
-                p->deal_time=item[4];
-                p->seller_ID=item[5];
-                p->buyer_ID=item[6];
-                if(order_table==NULL)order_table=p;
-                else tail2->next=p;
-                tail2=p;
-            }
-        }
-    }
-    orders_f.close();
 
-}
-void Data::load_buyer_data(string user_id){
-    //just like seller
-    sys_state=buyer;
-    //load all product except own
-    fstream commodity_f;
-    commodity_f.open("./data/commodity.txt",ios::in);
-    if(!commodity_f){
-        cout<<"open commodity.txt failed"<<endl;
-        exit(-1);
-    }
-    string file_line;
-    commodity_f>>file_line;
-    product_info*tail=NULL;
-    while(!commodity_f.eof()){
-         //get line from file
-        commodity_f>>file_line;
-        //split with ","
-        if(file_line!=""){
-            istringstream in(file_line);
-            string item[8];
-            string tmp;
-            int i=0;
-            while(getline(in,tmp,',')){
-                item[i]=tmp;
-                i++;
-            }
-            //检查是否销售中
-            if(item[7]=="销售中"){
-                product_info*p=new product_info;
-                p->next=NULL;
-                p->product_ID=item[0];
-                p->product_name=item[1];
-                p->price=atof(item[2].c_str());
-                p->quantity=atoi(item[3].c_str());
-                p->discription=item[4];
-                p->seller_ID=item[5];
-                p->time=item[6];
-                p->product_state=1;
-                if(product_table==NULL)product_table=p;
-                else tail->next=p;
-                tail=p;
-            }
-            
-        }
-    }
-    commodity_f.close();
-    //load buyer orders
-    fstream orders_f;
-    orders_f.open("./data/order.txt",ios::in);
-    if(!orders_f){
-        cout<<"open order.txt failed"<<endl;
-        exit(-1);
-    }
-    order_info*tail2=NULL;
-    while(!orders_f.eof()){
-         orders_f>>file_line;
-        if(file_line!=""){
-            istringstream in(file_line);
-            string item[7];
-            string tmp;
-            int i=0;
-            while(getline(in,tmp,',')){
-                item[i]=tmp;
-                i++;
-            }
-            if(item[6]==user_id){
-                order_info*p=new order_info;
-                p->next=NULL;
-                p->order_ID=item[0];
-                p->product_ID=item[1];
-                p->price=atof(item[2].c_str());
-                p->quantity=atoi(item[3].c_str());
-                p->deal_time=item[4];
-                p->seller_ID=item[5];
-                p->buyer_ID=item[6];
-                if(order_table==NULL)order_table=p;
-                else tail2->next=p;
-                tail2=p;
-            }
-        }
-    }
-    orders_f.close();
-}
-void Data::load_admin_data(){
-    cout<<"start load"<<endl;
-    sys_state=admin;
-    fstream commodity_f;
-    commodity_f.open("./data/commodity.txt",ios::in);
-    if(!commodity_f){
-        cout<<"open commodity.txt failed"<<endl;
-        exit(-1);
-    }
-    string file_line;
-    commodity_f>>file_line;
-    product_info*tail=NULL;
-    while(!commodity_f.eof()){
-         //get line from file
-        commodity_f>>file_line;
-        //split with ","
-        if(file_line!=""){
-            istringstream in(file_line);
-            string item[8];
-            string tmp;
-            int i=0;
-            while(getline(in,tmp,',')){
-                item[i]=tmp;
-                i++;
-            }
-            product_info*p=new product_info;
-            p->next=NULL;
-            p->product_ID=item[0];
-            p->product_name=item[1];
-            p->price=atof(item[2].c_str());
-            p->quantity=atoi(item[3].c_str());
-            p->discription=item[4];
-            p->seller_ID=item[5];
-            p->time=item[6];
-            if(item[7]=="销售中")
-                p->product_state=1;
-            else if(item[7]=="已下架")
-                p->product_state=0;
-            else{
-                cout<<"商品状态信息错误"<<endl;
-                exit(-1);
-            }
-            if(product_table==NULL)product_table=p;
-            else tail->next=p;
-            tail=p;
-        }
-    }
-    commodity_f.close();
-    cout<<"load product success"<<endl;
-    fstream orders_f;
-    orders_f.open("./data/order.txt",ios::in);
-    if(!orders_f){
-        cout<<"open order.txt failed"<<endl;
-        exit(-1);
-    }
-    order_info*tail2=NULL;
-    orders_f>>file_line;
-    while(!orders_f.eof()){
-        orders_f>>file_line;
-        if(file_line!=""){
-            stringstream in(file_line);
-            string item[7];
-            string tmp;
-            int i=0;
-            while(getline(in,tmp,',')){
-                item[i]=tmp;
-                i++;
-            }
-            order_info*p=new order_info;
-            p->next=NULL;
-            p->order_ID=item[0];
-            p->product_ID=item[1];
-            p->price=atof(item[2].c_str());
-            p->quantity=atoi(item[3].c_str());
-            p->deal_time=item[4];
-            p->seller_ID=item[5];
-            p->buyer_ID=item[6];
-            if(order_table==NULL)order_table=p;
-            else tail2->next=p;
-            tail2=p;
-        }
-    }
-    orders_f.close();
-    fstream users_f;
-    users_f.open("./data/user.txt",ios::in);
-    if(!users_f){
-        cout<<"open user.txt failed"<<endl;
-        exit(-1);
-    }
-    users_f>>file_line;
-    user_info*tail3=NULL;
-    while(!users_f.eof()){
-        users_f>>file_line;
-        if(file_line!=""){
-            stringstream in(file_line);
-            string item[7];
-            string tmp;
-            int i=0;
-            while(getline(in,tmp,',')){
-                item[i]=tmp;
-                i++;
-            }
-            user_info*p=new user_info;
-            p->next=NULL;
-            p->user_ID=item[0];
-            p->user_name=item[1];
-            p->user_password=item[2];
-            p->user_phonenumber=item[3];
-            p->user_address=item[4];
-            p->user_balance=item[5];
-            if(item[6]=="正常")p->user_state=1;
-            else if(item[6]=="封禁")p->user_state=0;
-            else{
-                cout<<item[6]<<endl;
-                cout<<"用户状态信息异常"<<endl;
-                exit(-1);
-            }
-            if(user_table==NULL)user_table=p;
-            else tail3->next=p;
-            tail3=p;
-        }
-    }
-    users_f.close();
-}
+
+
 void Data::show_data(){
     product_info*p=product_table;
     cout<<"product:"<<endl;
@@ -721,72 +399,50 @@ void Data::show_data(){
     }
 }
 bool Data::deal_select(string table){
-    cout<<"start deal select"<<endl;
-    if(sys_state==admin){
         //show all information
-        if(table=="commodity"){
-            if(product_table){
-                cout<<"商品ID\t名称\t价格\t上架时间\t卖家ID\t数量\t商品状态\n";
-                product_info*p=product_table;
-                while(p){
-                    cout<<p->product_ID<<'\t'<<p->product_name<<'\t'<<p->price<<'\t'<<p->time<<'\t'<<p->seller_ID<<'\t'<<p->quantity<<'\t';
-                    if(p->product_state)cout<<"销售中"<<endl;
-                    else cout<<"已下架"<<endl;
-                    p=p->next;
-                }
-            }
-            else{
-                cout<<"暂无商品"<<endl;
+    if(table=="commodity"){
+        if(product_table){
+            cout<<"商品ID\t名称\t价格\t上架时间\t卖家ID\t数量\t商品状态\n";
+            product_info*p=product_table;
+            while(p){
+                cout<<p->product_ID<<'\t'<<p->product_name<<'\t'<<p->price<<'\t'<<p->time<<'\t'<<p->seller_ID<<'\t'<<p->quantity<<'\t';
+                if(p->product_state)cout<<"销售中"<<endl;
+                else cout<<"已下架"<<endl;
+                p=p->next;
             }
         }
-        else if(table=="order"){
-            if(order_table){
-                cout<<"订单ID\t商品ID\t交易单价\t数量\t交易时间\t卖家ID\t买家ID\n";
-                order_info*p=order_table;
-                while(p){
-                    cout<<p->order_ID<<'\t'<<p->product_ID<<'\t'<<p->price<<"\t\t"<<p->quantity<<'\t'<<p->deal_time<<'\t'<<p->seller_ID<<'\t'<<p->buyer_ID<<endl;
-                    p=p->next;
-                }
-            }
-            else{
-                cout<<"暂无订单"<<endl;
-            }
-        }
-        else if(table=="user"){
-            if(user_table){
-                cout<<"用户ID\t用户名\t联系方式\t地址\t\t钱包余额\t用户状态\n";
-                user_info*p=user_table;
-                while(p){
-                    cout<<p->user_ID<<'\t'<<p->user_name<<'\t'<<p->user_phonenumber<<'\t'<<p->user_address<<"\t\t"<<p->user_balance<<'\t';
-                    if(p->user_state)cout<<"正常"<<endl;
-                    else cout<<"封禁"<<endl;
-                    p=p->next;
-                }
-            }
-            else {
-                cout<<"暂无用户"<<endl;
-            }
+        else{
+            cout<<"暂无商品"<<endl;
         }
     }
-    else if(sys_state==seller){
-        if(table=="commodity"){
-
+    else if(table=="order"){
+        if(order_table){
+            cout<<"订单ID\t商品ID\t交易单价\t数量\t交易时间\t卖家ID\t买家ID\n";
+            order_info*p=order_table;
+            while(p){
+                cout<<p->order_ID<<'\t'<<p->product_ID<<'\t'<<p->price<<"\t\t"<<p->quantity<<'\t'<<p->deal_time<<'\t'<<p->seller_ID<<'\t'<<p->buyer_ID<<endl;
+                p=p->next;
+            }
         }
-        else if(table=="order"){
-
-        }
-    }
-    else if(sys_state==buyer){
-        if(table=="commodity"){
-
-        }
-        else if(table=="order"){
-
+        else{
+            cout<<"暂无订单"<<endl;
         }
     }
-    return false;
-}
-bool Data::deal_select(string table,string condition){
+    else if(table=="user"){
+        if(user_table){
+            cout<<"用户ID\t用户名\t联系方式\t地址\t\t钱包余额\t用户状态\n";
+            user_info*p=user_table;
+            while(p){
+                cout<<p->user_ID<<'\t'<<p->user_name<<'\t'<<p->user_phonenumber<<'\t'<<p->user_address<<"\t\t"<<p->user_balance<<'\t';
+                if(p->user_state)cout<<"正常"<<endl;
+                else cout<<"封禁"<<endl;
+                p=p->next;
+            }
+        }
+        else {
+            cout<<"暂无用户"<<endl;
+        }
+    }
     return false;
 }
 bool Data::deal_delete(string table, string colum, string value){
@@ -800,7 +456,7 @@ bool Data::deal_insert(string table,string values){
         int cnt=0;
         while(getline(in,tmp,',')){
             true_values[cnt]=tmp;
-            cout<<tmp<<endl;
+            //cout<<tmp<<endl;
             cnt++;
         }
         if(table=="commodity"){
@@ -952,9 +608,9 @@ void Data::change_value(product_info*p,string change_c,string change_v){
     }
 }
 bool Data::deal_update(string table,string condition_c,string condition_v,string change_c,string change_v){
-    cout<<"start deal update"<<endl;
-    cout<<condition_c<<'\t'<<condition_v<<endl;
-    cout<<change_c<<'\t'<<change_v<<endl;
+    //cout<<"start deal update"<<endl;
+    //cout<<condition_c<<'\t'<<condition_v<<endl;
+    //cout<<change_c<<'\t'<<change_v<<endl;
     if(table=="user"){
         if(user_table){
             user_info*p=user_table;
@@ -1124,7 +780,9 @@ bool Data::deal_select(string table,string condition_c,string condition_v,bool c
                         //计算余额
                         //获取充值记录
                         string exp=generate_expression(condition_v);
-                        trans(exp);
+                        //trans(exp);
+                        float res=figure_exp(exp);
+                        cout<<res<<endl;
                         //获取出售金额
                         //获取购买金额
                     }
@@ -1161,11 +819,11 @@ string Data::generate_expression(string uid){
     Item*exp=NULL;
     //获取充值记录
     if(charge_table){
-        cout<<"get charge log"<<endl;
+        //cout<<"get charge log"<<endl;
         charge_info*p=charge_table;
         while(p){
-            cout<<p->charge_value<<endl;
-                if(cmp_condition(p,string("用户ID"),uid)){
+            //cout<<p->charge_value<<endl;
+            if(cmp_condition(p,string("用户ID"),uid)){
                 Item_num*num=new Item_num;
                 num->num=p->charge_value;
                 num->next=NULL;
@@ -1177,17 +835,17 @@ string Data::generate_expression(string uid){
     //获取购买和出售记录
     if(order_table){
         order_info*p=order_table;
-        cout<<"get order log"<<endl;
+        //cout<<"get order log"<<endl;
         while(p){
             if(cmp_condition(p,string("卖家ID"),uid)){
-                cout<<"卖出："<<p->quantity<<","<<p->price<<endl;
+                //cout<<"卖出："<<p->quantity<<","<<p->price<<endl;
                 Item_num*num=new Item_num;
                 num->num=p->price;
                 num->next=NULL;
                 insert_item(p->quantity,num,exp);
             }
             else if(cmp_condition(p,string("买家ID"),uid)){
-                cout<<"花费："<<p->quantity<<","<<p->price<<endl;
+                //cout<<"花费："<<p->quantity<<","<<p->price<<endl;
                 Item_num*num=new Item_num;
                 num->num=-p->price;
                 num->next=NULL;
@@ -1196,20 +854,20 @@ string Data::generate_expression(string uid){
             p=p->next;
         }
     }
-    cout<<"search data succ"<<endl;
-    if(exp)cout<<"not null"<<endl;
-    else cout<<"null"<<endl;
-    Item*tmp=exp;
-    while(tmp){
-        cout<<tmp->factor<<":"<<endl;
-        Item_num*x=tmp->nums;
-        while(x){
-            cout<<x->num<<" ";
-            x=x->next;
-        }
-        cout<<endl;
-        tmp=tmp->next;
-    }
+    //cout<<"search data succ"<<endl;
+    //if(exp)cout<<"not null"<<endl;
+    //else cout<<"null"<<endl;
+    //Item*tmp=exp;
+    //while(tmp){
+        //cout<<tmp->factor<<":"<<endl;
+        //Item_num*x=tmp->nums;
+        //while(x){
+            //cout<<x->num<<" ";
+            //x=x->next;
+        //}
+        //cout<<endl;
+        //tmp=tmp->next;
+    //}
     Item*p=exp;
     string expression="";
     //取得每一项
@@ -1263,7 +921,7 @@ string Data::generate_expression(string uid){
         
         p=p->next;
     }
-    cout<<expression<<endl;
+    //cout<<expression<<endl;
     //释放空间
     Item*dp=exp;
     Item*dq=NULL;
@@ -1282,7 +940,7 @@ string Data::generate_expression(string uid){
     return expression;
 }
 void Data::insert_item(int factor, Item_num*num,Item*&exp){
-    cout<<"insert factor:"<<factor<<"  num:"<<num->num<<endl;
+    //cout<<"insert factor:"<<factor<<"  num:"<<num->num<<endl;
     if(exp){
         Item*p=exp;
         Item*q=NULL;
@@ -1295,9 +953,9 @@ void Data::insert_item(int factor, Item_num*num,Item*&exp){
             p=p->next;
         }
         if(p){
-            cout<<"exist equal factor:"<<p->factor<<endl;
+            //cout<<"exist equal factor:"<<p->factor<<endl;
             if(p->nums){
-                cout<<"insert num:"<<num->num<<endl;
+                //cout<<"insert num:"<<num->num<<endl;
                 Item_num*pn=p->nums;
                 while(pn->next){
                     pn=pn->next;
@@ -1309,8 +967,8 @@ void Data::insert_item(int factor, Item_num*num,Item*&exp){
             }
         }
         else{
-            cout<<"not exist equal factor:"<<endl;
-            cout<<"insert factor:"<<factor<<" num:"<<num->num<<endl;
+            //cout<<"not exist equal factor:"<<endl;
+            //cout<<"insert factor:"<<factor<<" num:"<<num->num<<endl;
             Item* new_item=new Item;
             new_item->factor=factor;
             new_item->next=NULL;

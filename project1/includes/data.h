@@ -101,43 +101,49 @@ class Data:public Caculator
     void load_charge();
     void unload_charge();
     void load_user_data(string user_id);
-    void load_seller_data(string uer_id);
-    void load_buyer_data(string user_id);
+
     void unload_data();
-    void load_admin_data();
     void load_user_info(string user_id);
     void show_data();
-    void change_state(int state);
     product_info*get_commodity(string p_id);
     user_info*get_user(string u_id);
-    
-    
-    
-    void write_back();
     Data();
     ~Data();
-    private:
-    enum state_type{admin,seller,buyer,unlog};
-    state_type sys_state;
+    
+    
+    
 
+    private:
+    //deal functions, used by get_sql
     bool deal_select(string table);
-    bool deal_select(string table,string condition);
     bool deal_insert(string table,string values);
     bool deal_delete(string table,string colum,string value);
     bool deal_update(string table,string condition_c,string condition_v,string change_c,string change_v);
+    bool deal_select(string table,string condition_c,string condition_v,bool condition);
+
+    //functions to deal logic "="
     bool cmp_condition(user_info*p,string condition_c,string condition_v);
     bool cmp_condition(product_info*p,string condition_c,string condition_v);
     bool cmp_condition(order_info*p,string condition_c,string condition_v);
     bool cmp_condition(charge_info*p,string condition_c,string condition_v);
     
-    void change_value(product_info*p,string change_c,string change_v);
-    void change_value(user_info*p,string change_c,string change_v);
-    bool deal_select(string table,string condition_c,string condition_v,bool condition);
+    //functions to deal logic "CONTAIN"
     bool contain_condition(product_info*p,string condition_c,string condition_v);
     bool contain_condition(order_info*p,string condition_c,string condition_v);
+    
+    //functions to change value,used by deal_update
+    void change_value(product_info*p,string change_c,string change_v);
+    void change_value(user_info*p,string change_c,string change_v);
+
+    //insert function ,used by deal_insert
     void insert_newdata(product_info*p);
     void insert_newdata(order_info*p);
     void insert_newdata(user_info*p);
+    
+    //write back when any changes happened
+    void write_back();
+    
+    //functions to generate expression
     string  generate_expression(string uid);
     void insert_item(int factor,Item_num*p,Item*&exp);
 };
