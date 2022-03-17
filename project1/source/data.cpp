@@ -12,6 +12,7 @@ Data::Data(){
     products=0;
     orders=0;
     users=0;
+    charges=0;
 }
 Data::~Data(){
     if(product_table){
@@ -111,6 +112,7 @@ bool Data::get_sql(string sql_instr){
         string value=instrs[6];
         deal_delete(tablename,colum,value);
     }
+    add_commands(sql_instr);
     return false;
 }
 int Data::match_account(string account, string password){
@@ -214,6 +216,7 @@ void Data::load_charge(){
         charge_f>>file_line;
         //cout<<file_line<<endl;
         charges++;
+        //cout<<"charge:"<<charges<<endl;
         if(file_line!=""){
             istringstream in(file_line);
             string item[8];
@@ -229,6 +232,7 @@ void Data::load_charge(){
             p->charge_time=item[3];
             p->charge_user_id=item[1];
             p->charge_value=stoi(item[2].c_str());
+            p->charge_id=item[0];
             //cout<<"init a new log"<<endl;
             if(charge_table==NULL){charge_table=p;}
             else tail->next=p;
@@ -236,7 +240,7 @@ void Data::load_charge(){
         }
     }
     charge_f.close();
-    cout<<"load charge succ"<<endl;
+    //cout<<"load charge succ"<<endl;
 }
 void Data::unload_charge(){
     //TODO
@@ -280,6 +284,7 @@ void Data::load_data(){
                 p->product_state=0;
             else{
                 cout<<"商品状态信息错误"<<endl;
+                cout<<item[7]<<endl;
                 exit(-1);
             }
             if(product_table==NULL)product_table=p;
@@ -338,7 +343,7 @@ void Data::load_data(){
     while(!users_f.eof()){
         users_f>>file_line;
         users++;
-        cout<<file_line<<endl;
+        //cout<<file_line<<endl;
         if(file_line!=""){
             stringstream in(file_line);
             string item[7];
@@ -401,6 +406,7 @@ void Data::show_data(){
 bool Data::deal_select(string table){
         //show all information
     if(table=="commodity"){
+            cout<<"*******************************************************"<<endl;
         if(product_table){
             cout<<"商品ID\t名称\t价格\t上架时间\t卖家ID\t数量\t商品状态\n";
             product_info*p=product_table;
@@ -414,6 +420,7 @@ bool Data::deal_select(string table){
         else{
             cout<<"暂无商品"<<endl;
         }
+            cout<<"*********************************************************"<<endl;
     }
     else if(table=="order"){
         if(order_table){
@@ -473,6 +480,7 @@ bool Data::deal_insert(string table,string values){
         p->product_state=1;
         p->quantity=stoi(true_values[2].c_str());
         p->seller_ID=data_user_id;
+        p->discription=true_values[3];
         time_t now=time(0);
         tm*ltm=localtime(&now);
         string year,month,day;
@@ -482,6 +490,7 @@ bool Data::deal_insert(string table,string values){
         p->time=year+"-"+month+"-"+day;
         p->next=NULL;
         insert_newdata(p);
+        add_commodity(p);
     }
     else if(table=="order"){
         orders++;
@@ -495,6 +504,7 @@ bool Data::deal_insert(string table,string values){
         p->buyer_ID=true_values[6];
         p->next=NULL;
         insert_newdata(p);
+        add_order(p);
     }
     else if(table=="user"){
         users++;
@@ -508,8 +518,33 @@ bool Data::deal_insert(string table,string values){
         p->user_state=1;
         p->next=NULL;
         insert_newdata(p);
+        add_user(p);
+    }
+    else if(table=="charge"){
+        //订单ID，用户ID，充值金额
+        charges++;
+        charge_info*p=new charge_info;
+        p->charge_user_id=true_values[0];
+        p->charge_value=stof(true_values[1].c_str());
+        cout<<"charge id:"<<charges<<endl;
+        p->charge_id=generate_charge_id();
+        cout<<"s_chargeid:"<<p->charge_id<<endl;
+        //生成时间
+        p->charge_time=generate_time();
+        insert_newdata(p);
+        add_charge(p);
     }
     return false;
+}
+void Data::insert_newdata(charge_info*p){
+    if(!charge_table)charge_table=p;
+    else{
+        charge_info*q=charge_table;
+        while(q->next){
+            q=q->next;
+        }
+        q->next=p;
+    }
 }
 void Data::insert_newdata(product_info*p){
     if(!product_table)product_table=p;
@@ -583,7 +618,20 @@ void Data::change_value(user_info*p,string change_c,string change_v){
         if(change_v=="封禁"){p->user_state=0; return;}
     }
     else if(change_c=="钱包余额"){
-        p->user_balance=change_v;
+        float tmp=stof(change_v);
+        //cout<<"tmp:"<<tmp<<endl;
+        string s_v=float_to_s(tmp);
+        //cout<<"s:"<<s_v<<endl;
+        p->user_balance=s_v;
+    }
+    else if(change_c=="联系方式"){
+        p->user_phonenumber=change_v;
+    }
+    else if(change_c=="地址"){
+        p->user_address=change_v;
+    }
+    else if(change_c=="密码"){
+        p->user_password=change_v;
     }
 }
 void Data::change_value(product_info*p,string change_c,string change_v){
@@ -610,16 +658,20 @@ void Data::change_value(product_info*p,string change_c,string change_v){
 bool Data::deal_update(string table,string condition_c,string condition_v,string change_c,string change_v){
     //cout<<"start deal update"<<endl;
     //cout<<condition_c<<'\t'<<condition_v<<endl;
-    //cout<<change_c<<'\t'<<change_v<<endl;
+    cout<<change_c<<'\t'<<change_v<<endl;
     if(table=="user"){
         if(user_table){
             user_info*p=user_table;
             while(p){
                 if(cmp_condition(p,condition_c,condition_v)){
                     change_value(p,change_c,change_v);
+
+                    break;
                 }
                 p=p->next;
             }
+            //cout<<"p-balance:"<<p->user_balance<<endl;
+            change_user();
         }
     }
     else if(table=="commodity"){
@@ -628,9 +680,11 @@ bool Data::deal_update(string table,string condition_c,string condition_v,string
             while(p){
                 if(cmp_condition(p,condition_c,condition_v)){
                     change_value(p,change_c,change_v);
+                    break;
                 }
                 p=p->next;
             }
+            change_commodity();
         }
     }
     return false;
@@ -677,6 +731,7 @@ bool Data::deal_select(string table,string condition_c,string condition_v,bool c
             //输出结果
             p=product_table;
             if(flag){
+                cout<<"*****************************************************************************************"<<endl;
                 if((condition&&condition_c!="商品ID")||!condition){
                     cout<<"商品ID\t名称\t价格\t上架时间";
                     if(condition_c!="卖家ID")cout<<"\t卖家ID";
@@ -718,9 +773,10 @@ bool Data::deal_select(string table,string condition_c,string condition_v,bool c
                     }
                     p=p->next;
                 }
+                cout<<"*****************************************************************************************"<<endl;
             }
             else{
-
+                cout<<"无结果"<<endl;
             }
         }
     }
@@ -747,6 +803,7 @@ bool Data::deal_select(string table,string condition_c,string condition_v,bool c
             //输出结果
             p=order_table;
             if(flag){
+                cout<<"*******************************************************************************"<<endl;
                 cout<<"订单ID\t商品ID\t交易单价\t数量\t交易时间\t";
                 if(condition_c!="卖家ID")cout<<"卖家ID\t";
                 cout<<"买家ID"<<endl;
@@ -763,6 +820,10 @@ bool Data::deal_select(string table,string condition_c,string condition_v,bool c
                     }
                     p=p->next;
                 }
+                cout<<"*******************************************************************************"<<endl;
+            }
+            else{
+                cout<<"无结果"<<endl;
             }
         }
     }
@@ -772,11 +833,13 @@ bool Data::deal_select(string table,string condition_c,string condition_v,bool c
             while(p){
                 if(!condition){
                     if(cmp_condition(p,condition_c,condition_v)){
+                        cout<<"**********************************"<<endl;
                         //输出用户信息
                         cout<<"用户ID："<<p->user_ID<<endl;
                         cout<<"用户名："<<p->user_name<<endl;
                         cout<<"联系方式："<<p->user_phonenumber<<endl;
                         cout<<"地址："<<p->user_address<<endl;
+                        cout<<"余额：";
                         //计算余额
                         //获取充值记录
                         string exp=generate_expression(condition_v);
@@ -785,6 +848,7 @@ bool Data::deal_select(string table,string condition_c,string condition_v,bool c
                         cout<<res<<endl;
                         //获取出售金额
                         //获取购买金额
+                        cout<<"**********************************"<<endl;
                     }
                 }
                 p=p->next;
@@ -795,6 +859,133 @@ bool Data::deal_select(string table,string condition_c,string condition_v,bool c
 }
 void Data::write_back(){
 
+}
+
+//回写数据
+void Data::add_charge(charge_info*p){
+    fstream charge_f;
+    charge_f.open("./data/charge.txt",ios::app);
+    charge_f<<'\n'<<p->charge_id<<","<<p->charge_user_id<<","<<float_to_s(p->charge_value)<<","<<p->charge_time;
+
+    charge_f.close();
+}
+void Data::add_order(order_info*p){
+    fstream order_f;
+    order_f.open("./data/order.txt",ios::app);
+    order_f<<'\n'<<p->order_ID<<","<<p->product_ID<<","<<float_to_s(p->price)<<","<<p->quantity<<","<<p->deal_time<<","<<p->seller_ID<<","<<p->buyer_ID;
+    order_f.close();
+}
+void Data::add_commodity(product_info*p){
+    fstream commodity_f;
+    commodity_f.open("./data/commodity.txt",ios::app);
+    commodity_f<<'\n'<<p->product_ID<<","<<p->product_name<<","<<float_to_s(p->price)<<","<<p->quantity<<","<<p->discription<<","<<p->seller_ID<<","<<p->time<<",";
+    if(p->product_state)commodity_f<<"销售中";
+    else commodity_f<<"已下架";
+    commodity_f.close();
+}
+void Data::add_user(user_info*p){
+    fstream user_f;
+    user_f.open("./data/user.txt");
+    user_f<<'\n'<<p->user_ID<<","<<p->user_name<<","<<p->user_password<<","<<p->user_phonenumber<<","<<p->user_address<<","<<p->user_balance<<",";
+    if(p->user_state)user_f<<"正常";
+    else user_f<<"封禁";
+    user_f.close();
+}
+void Data::add_commands(string command){
+    //TODO
+    //get time
+    fstream commands_f;
+    commands_f.open("./data/commands.txt",ios::app);
+    commands_f<<"\n"<<generate_time_s()<<": "<<command;
+}
+void Data::change_user(){
+    fstream user_f;
+    user_f.open("./data/user.txt",ios::trunc|ios::out);
+    user_f<<"用户ID,用户名,密码,联系方式,地址,钱包余额,用户状态";
+    user_info*p=user_table;
+    while(p){
+        user_f<<'\n'<<p->user_ID<<","<<p->user_name<<","<<p->user_password<<","<<p->user_phonenumber<<","<<p->user_address<<","<<p->user_balance<<",";
+        if(p->user_state)user_f<<"正常";
+        else user_f<<"封禁";
+        p=p->next;
+    }
+    user_f.close();
+}
+void Data::change_commodity(){
+    cout<<"modify commodity"<<endl;
+    fstream commodity_f;
+    commodity_f.open("./data/commodity.txt",ios::trunc|ios::out);
+    commodity_f<<"商品ID,名称,价格,数量,描述,卖家ID,上架时间,商品状态";
+    product_info*p=product_table;
+    while(p){
+        commodity_f<<'\n'<<p->product_ID<<","<<p->product_name<<","<<float_to_s(p->price)<<","<<p->quantity<<","<<p->discription<<","<<p->seller_ID<<","<<p->time<<",";
+        if(p->product_state)commodity_f<<"销售中";
+        else commodity_f<<"已下架";
+        p=p->next;
+    }
+    commodity_f.close();
+}
+
+//float to string 保留一位小数
+string Data::float_to_s(float f){
+    ostringstream s_float;
+    s_float.precision(1);
+    s_float.setf(ios::fixed);
+    s_float<<f;
+    return s_float.str();
+}
+//生成编号、时间
+string Data::generate_commodity_id(){
+    string suff=to_string(products);
+    string pre="M";
+    for(int i=0;i<3-int(suff.length());i++){
+        pre+="0";
+    }
+    return pre+suff;
+}
+string Data::generate_order_id(){
+    string suff=to_string(orders);
+    string pre="T";
+    for(int i=0;i<3-int(suff.length());i++){
+        pre+="0";
+    }
+    return pre+suff;
+}
+string Data::generate_charge_id(){
+    string suff=to_string(charges);
+    string pre="C";
+    for(int i=0;i<3-int(suff.length());i++){
+        pre+="0";
+    }
+    return pre+suff;
+}
+string Data::generate_time(){
+    time_t now=time(0);
+    tm*ltm=localtime(&now);
+    string year,month,day;
+    year=to_string(ltm->tm_year+1900);
+    month=to_string(1+ltm->tm_mon);
+    day=to_string(ltm->tm_mday);
+    if(month.length()==1)month="0"+month;
+    if(day.length()==1)day="0"+day;
+    return year+"-"+month+"-"+day;
+}
+string Data::generate_time_s(){
+    time_t now=time(0);
+    tm*ltm=localtime(&now);
+    string h,m,s;
+    h=to_string(ltm->tm_hour);
+    m=to_string(ltm->tm_min);
+    s=to_string(ltm->tm_sec);
+    return generate_time()+" "+h+":"+m+":"+s;
+}
+string Data::generate_user_id(){
+    string suff=to_string(users);
+    string pre="U";
+    for(int i=0;i<3-int(suff.length());i++){
+        pre+="0";
+    }
+    return pre+suff;
 }
 Data::product_info*Data::get_commodity(string p_id){
     product_info*p=product_table;
@@ -854,20 +1045,7 @@ string Data::generate_expression(string uid){
             p=p->next;
         }
     }
-    //cout<<"search data succ"<<endl;
-    //if(exp)cout<<"not null"<<endl;
-    //else cout<<"null"<<endl;
-    //Item*tmp=exp;
-    //while(tmp){
-        //cout<<tmp->factor<<":"<<endl;
-        //Item_num*x=tmp->nums;
-        //while(x){
-            //cout<<x->num<<" ";
-            //x=x->next;
-        //}
-        //cout<<endl;
-        //tmp=tmp->next;
-    //}
+
     Item*p=exp;
     string expression="";
     //取得每一项

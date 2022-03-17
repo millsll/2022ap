@@ -62,6 +62,7 @@ class Data:public Caculator
     
     //充值记录数据维护
     struct charge_info{
+        string charge_id;
         string charge_user_id;
         string charge_time;
         float charge_value;
@@ -105,6 +106,12 @@ class Data:public Caculator
     void unload_data();
     void load_user_info(string user_id);
     void show_data();
+    string generate_user_id();
+    string generate_commodity_id();
+    string generate_order_id();
+    string generate_charge_id();
+    string generate_time();
+    string generate_time_s();
     product_info*get_commodity(string p_id);
     user_info*get_user(string u_id);
     Data();
@@ -139,9 +146,20 @@ class Data:public Caculator
     void insert_newdata(product_info*p);
     void insert_newdata(order_info*p);
     void insert_newdata(user_info*p);
+    void insert_newdata(charge_info*p);
     
     //write back when any changes happened
     void write_back();
+    void add_order(order_info*p);
+    void add_user(user_info*p);
+    void change_user();
+    void add_commodity(product_info*p);
+    void change_commodity();
+    void add_charge(charge_info*p);
+    void add_commands(string command);
+    
+    //trans float to string 
+    string float_to_s(float f);
     
     //functions to generate expression
     string  generate_expression(string uid);

@@ -7,14 +7,21 @@ class User: private Seller,private Buyer
     public:
     //用户登录
     void user_log_in();
+        //用户注册
+    void user_register();
+    
+    private:
+    string user_id;
     //用户注销
     void user_log_out();
     //用户功能界面
     void user_interface();
-    //用户注册
-    void user_register();
     //用户信息功能
-    void user_info_function();
-    private:
-    string user_id;
+    bool user_info_function();
+    //修改用户信息
+    bool user_change_info();
+    //用户充值
+    void user_charge();
+    //查看用户信息
+    void user_search_info();
 };

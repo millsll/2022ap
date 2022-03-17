@@ -39,7 +39,7 @@ void User::user_log_in(){
         user_id=in_account;
         load_user_data(user_id);
         //进入主界面
-        cout<<"加载成功"<<endl;
+        //cout<<"加载成功"<<endl;
         user_interface();
     }
     //
@@ -49,10 +49,12 @@ void User::user_log_out(){
     unload_data();
     user_id="";
 }
-void User::user_info_function(){
+bool User::user_info_function(){
     while(1){
-        cout<<"个人信息管理"<<endl;
+        cout<<"**************个人信息管理*****************"<<endl;
         cout<<"1.查看信息 2.修改信息 3.充值 4.返回用户界面"<<endl;
+        cout<<"*******************************************"<<endl;
+        cout<<" 请选择功能：";
         string option;
         do{
             cin>>option;
@@ -63,25 +65,30 @@ void User::user_info_function(){
 
         if(option=="1"){
             //seach user_info
-            string instr="SELECT * FROM user WHERE 用户ID = "+user_id;
-            get_sql(instr);
+            user_search_info();
+            
         }
         else if(option=="2"){
             //update user_info
+            if(user_change_info())return 1;
         }
         else if(option=="3"){
             //charge
+            user_charge();
         }
         else if(option=="4"){
             //跳出个人信息界面，返回用户界面
             break;
         }
     }
+    return 0;
 }
 void User::user_interface(){
     while(1){
-        cout<<"请选择功能"<<endl;
+        cout<<"********************用户功能********************"<<endl;
         cout<<"1、我是买家 2、我是卖家 3、个人信息 4、注销登录"<<endl;
+        cout<<"*************************************************"<<endl;
+        cout<<"请选择功能："<<endl;
         string option;
         do{
             cin>>option;
@@ -105,7 +112,7 @@ void User::user_interface(){
         }
         else if (option=="3"){
             //show info function
-            user_info_function();
+            if(user_info_function())break;
         }
         else if(option=="4"){
             //清除数据
@@ -147,4 +154,93 @@ void User::user_register(){
     else{
 
     }
+}
+bool User::user_change_info(){
+    cout<<"1. 联系方式 2.地址 3.密码"<<endl;
+    cout<<"请选择你要修改的信息：";
+    string option;
+    do{
+        cin>>option;
+        if(option!="1"&&option!="2"&&option!="3"){
+            cout<<"选项错误，要重新选择吗？(y/n)";
+            string optionyn;
+            do{
+                cin>>optionyn;
+                if(optionyn!="y"&&optionyn!="Y"&&optionyn!="n"&&optionyn!="N"){
+                    cout<<"输入错误，请重新输入(y/n)"<<endl;
+                }
+            }while(optionyn!="y"&&optionyn!="Y"&&optionyn!="n"&&optionyn!="N");
+            if(optionyn=="N"||optionyn=="n"){
+                cout<<"放弃修改。"<<endl;
+                break;
+            }
+        }
+
+    }while(option!="1"&&option!="2"&&option!="3");
+    if(option=="1"){
+        cout<<"请输入修改后的联系方式：";
+        string phone;
+        cin>>phone;
+        cout<<"请确认修改后的联系方式无误："<<endl;
+        cout<<"联系方式："<<phone<<endl;
+        cout<<"(y/n)";
+        string option;
+        cin>>option;
+        if(option=="Y"||option=="y"){
+            string instr = "UPDATE user SET 联系方式 = "+phone+" WHERE 用户ID = "+user_id;
+            get_sql(instr);
+        }
+
+    }
+    else if(option=="2"){
+        cout<<"请输入修改后的地址：";
+        string new_addr;
+        cin>>new_addr;
+        cout<<"请确认修改后的地址无误：";
+        cout<<"新地址："<<new_addr<<endl;
+        cout<<"(y/n)";
+        string option;
+        cin>>option;
+        if(option=="Y"||option=="y"){
+            string instr="UPDATE user SET 地址 = "+new_addr+" WHERE 用户ID = "+user_id;
+            get_sql(instr);
+        }
+        
+    }
+    else if(option =="3"){
+        cout<<"请输入修改后的密码：";
+        string new_pw;
+        cin>>new_pw;
+        cout<<"请确认修改后的密码：";
+        cout<<"新密码："<<new_pw<<endl;
+        cout<<"(y/n)";
+        string option;
+        cin>>option;
+        if(option=="Y"||option=="y"){
+            string instr="UPDATE user SET 密码 = "+new_pw+" WHERE 用户ID = "+user_id;
+            get_sql(instr);
+        }
+        cout<<"请重新登录！"<<endl;
+        return 1;
+    }
+    return 0;
+}
+void User::user_charge(){
+    cout<<"输入你想要充值的金额：";
+    string charge_value;
+    cin>>charge_value;
+    //生成订单信息并入表,不需要时间
+    string instr1="INSERT INTO charge VALUES ("+user_id+","+charge_value+")";
+    get_sql(instr1);
+    //更新余额信息
+    Data::user_info*p=get_user(user_id);
+    cout<<"old balance :"<<p->user_balance<<endl;
+    float new_balance=stof(charge_value)+stof(p->user_balance);
+    cout<<"new balance :"<<new_balance<<endl;
+    string instr2="UPDATE user SET 钱包余额 = "+to_string(new_balance)+" WHERE 用户ID = "+user_id;
+    get_sql(instr2);
+}
+void User::user_search_info(){
+    string instr="SELECT * FROM user WHERE 用户ID = "+user_id;
+    get_sql(instr);
 }

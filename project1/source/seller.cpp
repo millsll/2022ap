@@ -1,7 +1,6 @@
 #include"../includes/seller.h"
 void Seller::init_seller(string user_id){
     seller_id=user_id;
-    change_state(2);
     show_data();
 }
 void Seller::seller_post_product(){
@@ -96,7 +95,7 @@ void Seller::seller_change_product(){
         cout<<"商品名称："<<p->product_name<<endl;
         cout<<"商品价格：";
         printf("%.1f\n",p->price);
-        cout<<"商品数量："<<p->quantity<<endl;
+        cout<<"商品数量："<<quantity<<endl;
         cout<<"商品描述："<<p->discription<<endl;
         string instr="UPDATE commodity SET 数量 = "+quantity+" WHERE 商品ID = "+p_id;
         get_sql(instr);
@@ -111,9 +110,11 @@ void Seller::seller_history_order(){
 }
 void Seller::seller_interface(){
     while(1){
-        cout<<"请选择功能："<<endl;
-        cout<<"卖家功能"<<endl;
+        
+        cout<<"**************************************卖家功能*************************************"<<endl;
         cout<<"1.发布商品 2.查看发布商品 3.修改商品信息 4.下架商品 5.查看历史订单 6.返回用户主界面"<<endl;
+        cout<<"************************************************************************************"<<endl;
+        cout<<"请选择功能："<<endl;
         string option;
         do{
             cin>>option;

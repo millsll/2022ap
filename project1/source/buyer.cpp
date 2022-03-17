@@ -5,7 +5,6 @@
 using namespace std;
 void Buyer::init_buyer(string user_id){
     buyer_id=user_id;
-    change_state(3);
     //show_data();
 }
 void Buyer::buyer_show_product_list(){
@@ -126,9 +125,11 @@ void Buyer::buy_product(){
 }
 void Buyer::buyer_interface(){
     while(1){
-        cout<<"请选择功能："<<endl;
-        cout<<"买家功能"<<endl;
+        
+        cout<<"*****************************************买家功能***************************************"<<endl;
         cout<<"1.查看商品列表 2.购买商品 3.搜索商品 4.查看历史订单 5.查看商品详细信息 6.返回用户主界面"<<endl;
+        cout<<"****************************************************************************************"<<endl;
+        cout<<"请选择功能："<<endl;
         string option;
         do{
             cin>>option;
