@@ -1,7 +1,7 @@
 #include"../includes/seller.h"
 void Seller::init_seller(string user_id){
     seller_id=user_id;
-    show_data();
+    //show_data();
 }
 void Seller::seller_post_product(){
     string instr="INSERT INTO commodity VALUES";
@@ -33,7 +33,7 @@ void Seller::seller_post_product(){
         get_sql(instr);
     }
     else{
-        cout<<"返回上一级"<<endl;
+        cout<<"放弃发布"<<endl;
     }
 }
 void Seller::seller_show_product_list(){
@@ -44,6 +44,13 @@ void Seller::seller_remove_product(){
     string product_id;
     cout<<"输入商品ID:";
     cin>>product_id;
+    product_info*p=get_commodity(product_id);
+    if(p){
+        if(p->seller_ID!=seller_id){
+            cout<<"无权下架他人商品。"<<endl;
+            return;
+        }
+    }
     string instr="UPDATE commodity SET 商品状态 = 已下架 WHERE 商品ID = "+product_id;
     get_sql(instr);
 }
@@ -66,10 +73,23 @@ void Seller::seller_change_product(){
         Data::product_info*p=get_commodity(p_id);
         cout<<"商品ID："<<p->product_ID<<endl;
         cout<<"商品名称："<<p->product_name<<endl;
-        cout<<"商品价格："<<price;
+        cout<<"商品价格："<<price<<endl;
         cout<<"商品描述："<<p->discription<<endl;
-        string instr="UPDATE commodity SET 价格 = "+price+" WHERE 商品ID = "+p_id;
-        get_sql(instr);
+        cout<<"(y/n)"<<endl;
+        string option;
+        do{
+            cin>>option;
+            if(option!="y"&&option!="Y"&&option!="n"&&option!="N"){
+                cout<<"输入错误，请重新输入(y/n)"<<endl;
+            }
+        }while(option!="y"&&option!="Y"&&option!="n"&&option!="N");
+        if(option=="Y"||option=="y"){
+            string instr="UPDATE commodity SET 价格 = "+price+" WHERE 商品ID = "+p_id;
+            get_sql(instr);
+        }
+        else{
+            cout<<"放弃修改"<<endl;
+        }
     }
     else if(option=="2"){
         cout<<"请输入修改后的商品你描述：";
@@ -82,8 +102,21 @@ void Seller::seller_change_product(){
         cout<<"商品价格：";
         printf("%.1f\n",p->price);
         cout<<"商品描述："<<discription<<endl;
-        string instr="UPDATE commodity SET 描述 = "+discription+" WHERE 商品ID = "+p_id;
-        get_sql(instr);
+        cout<<"(y/n)"<<endl;
+        string option;
+        do{
+            cin>>option;
+            if(option!="y"&&option!="Y"&&option!="n"&&option!="N"){
+                cout<<"输入错误，请重新输入(y/n)"<<endl;
+            }
+        }while(option!="y"&&option!="Y"&&option!="n"&&option!="N");
+        if(option=="Y"||option=="y"){
+            string instr="UPDATE commodity SET 描述 = "+discription+" WHERE 商品ID = "+p_id;
+            get_sql(instr);
+        }
+        else{
+            cout<<"放弃修改"<<endl;
+        }
     }
     else if(option=="3"){
         cout<<"请输入修改后的商品数量：";
@@ -97,16 +130,27 @@ void Seller::seller_change_product(){
         printf("%.1f\n",p->price);
         cout<<"商品数量："<<quantity<<endl;
         cout<<"商品描述："<<p->discription<<endl;
-        string instr="UPDATE commodity SET 数量 = "+quantity+" WHERE 商品ID = "+p_id;
-        get_sql(instr);
+        cout<<"(y/n)"<<endl;
+        string option;
+        do{
+            cin>>option;
+            if(option!="y"&&option!="Y"&&option!="n"&&option!="N"){
+                cout<<"输入错误，请重新输入(y/n)"<<endl;
+            }
+        }while(option!="y"&&option!="Y"&&option!="n"&&option!="N");
+        if(option=="Y"||option=="y"){
+            string instr="UPDATE commodity SET 数量 = "+quantity+" WHERE 商品ID = "+p_id;
+            get_sql(instr);
+        }
+        else{
+            cout<<"放弃修改"<<endl;
+        }
     }
-    show_data();
+    //show_data();
 }
 void Seller::seller_history_order(){
     string instr="SELECT * FROM order WHERE 卖家ID = "+seller_id;
-    if(!get_sql(instr)){
-        cout<<"没有历史订单"<<endl;
-    }
+    get_sql(instr);
 }
 void Seller::seller_interface(){
     while(1){

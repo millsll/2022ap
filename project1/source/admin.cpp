@@ -53,7 +53,7 @@ void Admin::admin_remove_product(){
     string instr="UPDATE commodity SET 商品状态 = 已下架 WHERE 商品ID = "+product_id;
     cout<<"instr:"<<instr;
     get_sql(instr);
-    show_data();
+    //show_data();
 }
 void Admin::admin_show_history_orders(){
     string instr="SELECT * FROM order";
@@ -76,7 +76,7 @@ void Admin::admin_block_user(){
         string user_sql_instr="UPDATE user SET 用户状态 = 封禁 WHERE 用户ID = "+block_user_ID;
         get_sql(commodity_sql_instr);
         get_sql(user_sql_instr);
-        show_data();
+        //show_data();
     }
 
 }
@@ -123,8 +123,8 @@ void Admin::admin_search_buyer_order(){
 }
 void Admin::init_admin(){
     load_data();
-    //load_charge();
-    show_data();
+    load_charge();
+    //show_data();
     //cout<<"load success"<<endl;
     //show_data();
 }

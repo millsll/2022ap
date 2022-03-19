@@ -1,5 +1,6 @@
 #include"../includes/user.h"
 #include<iostream>
+#include<sstream>
 using namespace std;
 void User::user_log_in(){
     string in_account,in_password;
@@ -41,7 +42,7 @@ void User::user_log_in(){
         //计算收到信息数,只计算未读。
         //SELECT count(*) FROM user WHERE 接收ID = user_id
         int unread_msg_cnt=get_sql("SELECT count(*) FROM message WHERE 接收ID = "+user_id);
-        cout<<"未读数："<<unread_msg_cnt<<endl;
+        //cout<<"未读数："<<unread_msg_cnt<<endl;
         if(unread_msg_cnt){
             cout<<"你有"<<unread_msg_cnt<<"条未读留言"<<endl;
         }
@@ -58,12 +59,13 @@ void User::user_log_out(){
     unload_message();
     user_id="";
 }
+//already check input
 bool User::user_info_function(){
     while(1){
-        cout<<"**************个人信息管理*****************"<<endl;
+        cout<<"*******************个人信息管理**********************"<<endl;
         cout<<"1.查看信息 2.修改信息 3.充值 4.我的消息 5.返回用户界面"<<endl;
-        cout<<"*******************************************"<<endl;
-        cout<<" 请选择功能：";
+        cout<<"******************************************************"<<endl;
+        cout<<"请选择功能：";
         string option;
         do{
             cin>>option;
@@ -96,10 +98,12 @@ bool User::user_info_function(){
     }
     return 0;
 }
+//already check input
 void User::user_message_interface(){
     while(1){
-        cout<<"消息面板"<<endl;
+        cout<<"********************消息面板********************"<<endl;
         cout<<"1.发送消息 2.收到消息 3.已发送的消息 4.返回上一层"<<endl;
+        cout<<"*************************************************";
         cout<<"请选择功能：";
         string option;
         do{
@@ -123,6 +127,7 @@ void User::user_message_interface(){
         }
     }
 }
+//already check input
 void User::user_interface(){
     while(1){
         cout<<"********************用户功能********************"<<endl;
@@ -186,13 +191,17 @@ void User::user_register(){
     cout<<"再次输入密码：";
     string passwd2;
     cin>>passwd2;
-    if(passwd1==passwd2){
+    bool flag=false;
+    flag=passwd1==passwd2;
+    if(flag){
         string instr="INSERT INTO user VALUES ("+new_uid+","+user_name+","+passwd1+","+phone+","+address+")";
         get_sql(instr);
-        show_data();
+        //show_data();
+        cout<<"注册成功,请返回登录"<<endl;
+        unload_data();
     }
     else{
-
+        cout<<"注册失败，请重试"<<endl;
     }
 }
 bool User::user_change_info(){
@@ -225,10 +234,19 @@ bool User::user_change_info(){
         cout<<"联系方式："<<phone<<endl;
         cout<<"(y/n)";
         string option;
-        cin>>option;
+        do{
+            cin>>option;
+            if(option!="y"&&option!="Y"&&option!="n"&&option!="N"){
+                cout<<"输入错误，请重新输入(y/n)"<<endl;
+            }
+        }while(option!="y"&&option!="Y"&&option!="n"&&option!="N");
+
         if(option=="Y"||option=="y"){
             string instr = "UPDATE user SET 联系方式 = "+phone+" WHERE 用户ID = "+user_id;
             get_sql(instr);
+        }
+        else{
+            cout<<"放弃修改"<<endl;
         }
 
     }
@@ -240,10 +258,19 @@ bool User::user_change_info(){
         cout<<"新地址："<<new_addr<<endl;
         cout<<"(y/n)";
         string option;
-        cin>>option;
+        do{
+            cin>>option;
+            if(option!="y"&&option!="Y"&&option!="n"&&option!="N"){
+                cout<<"输入错误，请重新输入(y/n)"<<endl;
+            }
+        }while(option!="y"&&option!="Y"&&option!="n"&&option!="N");
+
         if(option=="Y"||option=="y"){
             string instr="UPDATE user SET 地址 = "+new_addr+" WHERE 用户ID = "+user_id;
             get_sql(instr);
+        }
+        else{
+            cout<<"放弃修改"<<endl;
         }
         
     }
@@ -255,13 +282,24 @@ bool User::user_change_info(){
         cout<<"新密码："<<new_pw<<endl;
         cout<<"(y/n)";
         string option;
-        cin>>option;
+        do{
+            cin>>option;
+            if(option!="y"&&option!="Y"&&option!="n"&&option!="N"){
+                cout<<"输入错误，请重新输入(y/n)"<<endl;
+            }
+        }while(option!="y"&&option!="Y"&&option!="n"&&option!="N");
+
         if(option=="Y"||option=="y"){
             string instr="UPDATE user SET 密码 = "+new_pw+" WHERE 用户ID = "+user_id;
             get_sql(instr);
+            cout<<"请重新登录！"<<endl;
+            return 1;
         }
-        cout<<"请重新登录！"<<endl;
-        return 1;
+        else{
+            cout<<"放弃修改"<<endl;
+            return 0;
+        }
+        
     }
     return 0;
 }
@@ -279,10 +317,19 @@ void User::user_send_message(){
     cin>>msg_content;
     cout<<"确定要发送吗？(y/n)";
     string option;
-    cin>>option;
+    do{
+        cin>>option;
+        if(option!="y"&&option!="Y"&&option!="n"&&option!="N"){
+            cout<<"输入错误，请重新输入(y/n)"<<endl;
+        }
+    }while(option!="y"&&option!="Y"&&option!="n"&&option!="N");
+
     if(option=="Y"||option=="y"){
         string instr="INSERT INTO message VALUES ("+user_id+","+rcv_id+","+msg_content+")";
         get_sql(instr);
+    }
+    else{
+        cout<<"放弃发送"<<endl;
     }
 }
 void User::user_show_sent_message(){
@@ -290,10 +337,24 @@ void User::user_show_sent_message(){
     string instr="SELECT * FROM message WHERE 发送ID = "+user_id;
     get_sql(instr);
 }
+bool isNum(string str){
+    stringstream sin(str);
+    double d;
+    char c;
+    if(!(sin>>d))return false;
+    if(sin>>c)return false;
+    return true;
+}
 void User::user_charge(){
     cout<<"输入你想要充值的金额：";
     string charge_value;
-    cin>>charge_value;
+    //检查输入是否为数字
+    do{
+        cin>>charge_value;
+        if(!isNum(charge_value)){
+            cout<<"输入不是数字，请重新输入：";
+        }
+    }while(!isNum(charge_value));
     //生成订单信息并入表,不需要时间
     string instr1="INSERT INTO charge VALUES ("+user_id+","+charge_value+")";
     get_sql(instr1);

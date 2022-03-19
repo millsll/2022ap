@@ -554,13 +554,7 @@ bool Data::deal_insert(string table,string values){
         p->quantity=stoi(true_values[2].c_str());
         p->seller_ID=data_user_id;
         p->discription=true_values[3];
-        time_t now=time(0);
-        tm*ltm=localtime(&now);
-        string year,month,day;
-        year=to_string(ltm->tm_year+1900);
-        month=to_string(1+ltm->tm_mon);
-        day=to_string(ltm->tm_mday);
-        p->time=year+"-"+month+"-"+day;
+        p->time=generate_time();
         p->next=NULL;
         insert_newdata(p);
         add_commodity(p);
@@ -1119,7 +1113,7 @@ void Data::change_message(){
     msg_f.close();
 }
 void Data::change_commodity(){
-    cout<<"modify commodity"<<endl;
+    //cout<<"modify commodity"<<endl;
     fstream commodity_f;
     commodity_f.open("./data/commodity.txt",ios::trunc|ios::out);
     commodity_f<<"商品ID,名称,价格,数量,描述,卖家ID,上架时间,商品状态";

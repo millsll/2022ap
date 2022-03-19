@@ -25,18 +25,14 @@ void Buyer::buyer_search_product(){
 }
 void Buyer::buyer_history_orders(){
     string instr="SELECT * FROM order WHERE 买家ID = "+buyer_id;
-    if(!get_sql(instr)){
-        cout<<"没有历史订单"<<endl;
-    }
+    get_sql(instr);
 }
 void Buyer::buyer_detail_info(){
     cout<<"输入商品ID：";
     string product_ID;
     cin>>product_ID;
     string instr="SELECT * FROM commodity WHERE 商品ID CONTAINS "+product_ID;
-    if(!get_sql(instr)){
-        cout<<"没有找到该商品"<<endl;
-    }
+    get_sql(instr);
 }
 void Buyer::buy_product(){
     string product_id;
@@ -88,7 +84,7 @@ void Buyer::buy_product(){
                 c_num.str("");
                 c_num<<new_buyer_balance;
                 string c_buyer_balance=c_num.str();
-                cout<<c_buyer_balance<<endl;
+                //cout<<c_buyer_balance<<endl;
                 string instr3="UPDATE user SET 钱包余额 = "+c_buyer_balance+" WHERE 用户ID = "+buyer_id;
                 get_sql(instr3);
                 //新建订单
@@ -108,7 +104,7 @@ void Buyer::buy_product(){
                 c_num.str("");
                 c_num<<p->price;
                 string value="("+c_order+","+p->product_ID+","+c_num.str()+","+quantity+","+year+"-"+month+"-"+day+","+s->user_ID+","+b->user_ID+")";
-                cout<<value<<endl;
+                //cout<<value<<endl;
                 get_sql("INSERT INTO order VALUES "+value);
                 c_num.str("");
             }
@@ -119,10 +115,10 @@ void Buyer::buy_product(){
         }
     }
     else{
-        cout<<"没有该商品"<<endl;
+        cout<<"没有该商品,ID:"<<product_id<<endl;
         return;
     }
-    show_data();
+    //show_data();
 }
 void Buyer::buyer_interface(){
     while(1){
