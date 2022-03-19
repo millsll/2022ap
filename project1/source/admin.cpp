@@ -115,8 +115,15 @@ void Admin::admin_interface(){
         }
     }
 }
+void Admin::admin_search_seller_order(){
+
+}
+void Admin::admin_search_buyer_order(){
+    
+}
 void Admin::init_admin(){
     load_data();
+    //load_charge();
     show_data();
     //cout<<"load success"<<endl;
     //show_data();

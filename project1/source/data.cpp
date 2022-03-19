@@ -9,10 +9,12 @@ Data::Data(){
     order_table=NULL;
     user_table=NULL;
     charge_table=NULL;
+    message_table=NULL;
     products=0;
     orders=0;
     users=0;
     charges=0;
+    messages=0;
 }
 Data::~Data(){
     if(product_table){
@@ -46,7 +48,8 @@ Data::~Data(){
     orders=0;
     users=0;
 }
-bool Data::get_sql(string sql_instr){
+int Data::get_sql(string sql_instr){
+    add_commands(sql_instr);
     //cout<<sql_instr<<endl;
     istringstream in(sql_instr);
     string instrs[20];
@@ -81,7 +84,12 @@ bool Data::get_sql(string sql_instr){
             else if(instrs[6]=="CONTAINS")flag=1;
             string condition_colum=instrs[5];
             string condition_value=instrs[7];
-            deal_select(tablename,condition_colum,condition_value,flag);
+            if(instrs[1]=="*"){
+                deal_select(tablename,condition_colum,condition_value,flag);
+            }
+            else if(instrs[1]=="count(*)"){
+                return deal_select_count(tablename,condition_colum,condition_value,flag);
+            }
         }
         else{
             deal_select(tablename);
@@ -112,8 +120,8 @@ bool Data::get_sql(string sql_instr){
         string value=instrs[6];
         deal_delete(tablename,colum,value);
     }
-    add_commands(sql_instr);
-    return false;
+    
+    return 0;
 }
 int Data::match_account(string account, string password){
     int flag=0;
@@ -244,6 +252,70 @@ void Data::load_charge(){
 }
 void Data::unload_charge(){
     //TODO
+    if(charge_table){
+        charge_info*p=charge_table;
+        while(p){
+            charge_info*tmp=p;
+            p=p->next;
+            delete tmp;
+        }
+        charges=0;
+        charge_table=NULL;
+    }
+}
+void Data::load_message(){
+    fstream msg_f;
+    msg_f.open("./data/message.txt",ios::in);
+    if(!msg_f){
+        cout<<"open message failed"<<endl;
+    }
+    string file_line;
+    msg_f>>file_line;
+    //cout<<file_line<<endl;
+    message_info*tail=NULL;
+    while(!msg_f.eof()){
+        msg_f>>file_line;
+        messages++;
+        if(file_line!=""){
+            istringstream in(file_line);
+            string item[8];
+            string tmp;
+            int i=0;
+            while(getline(in,tmp,',')){
+                item[i]=tmp;
+                //cout<<tmp<<endl;
+                i++;
+            }
+            message_info*p=new message_info;
+            p->next=NULL;
+            p->msg_id=item[0];
+            p->sender_ID=item[1];
+            p->recv_Id=item[2];
+            if(item[3]=="已读")p->read=1;
+            else if(item[3]=="未读")p->read=0;
+            else{
+                cout<<"信息状态错误"<<endl;
+            }
+            p->content=item[4];
+            if(message_table==NULL)message_table=p;
+            else tail->next=p;
+            tail=p;
+        }
+    }
+    msg_f.close();
+}
+void Data::unload_message(){
+    //TODO
+    if(message_table){
+        message_info*p=message_table;
+        while(p){
+            message_info*tmp=p;
+            p=p->next;
+            delete tmp;
+        }
+        messages=0;
+        message_table=NULL;
+    }
 }
 void Data::load_data(){
     fstream commodity_f;
@@ -379,6 +451,7 @@ void Data::load_user_data(string user_id){
     data_user_id==user_id;
     load_data();
     load_charge();
+    load_message();
 }
 
 
@@ -534,6 +607,17 @@ bool Data::deal_insert(string table,string values){
         insert_newdata(p);
         add_charge(p);
     }
+    else if(table=="message"){
+        messages++;
+        message_info*p=new message_info;
+        p->sender_ID=true_values[0];
+        p->recv_Id=true_values[1];
+        p->read=0;
+        p->msg_id=generate_message_id();
+        p->content=true_values[2];
+        insert_newdata(p);
+        add_message(p);
+    }
     return false;
 }
 void Data::insert_newdata(charge_info*p){
@@ -579,6 +663,16 @@ void Data::insert_newdata(user_info*p){
         q->next=p;
     }
 }
+void Data::insert_newdata(message_info*p){
+    if(!message_table)message_table=p;
+    else{
+        message_info*q=message_table;
+        while(q->next){
+            q=q->next;
+        }
+        q->next=p;
+    }
+}
 bool Data::cmp_condition(user_info* p,string condition_c,string condition_v){
     if(condition_c=="用户ID"){
         return p->user_ID==condition_v;
@@ -610,6 +704,18 @@ bool Data::cmp_condition(order_info*p,string condition_c,string condition_v){
 bool Data::cmp_condition(charge_info*p,string condition_c,string condition_v){
     if(condition_c=="用户ID"){
         return p->charge_user_id==condition_v;
+    }
+    return false;
+}
+bool Data::cmp_condition(message_info*p,string condition_c,string condition_v){
+    if(condition_c=="接收ID"){
+        return p->recv_Id==condition_v;
+    }
+    if(condition_c=="发送ID"){
+        return p->sender_ID==condition_v;
+    }
+    if(condition_c=="信息ID"){
+        return p->msg_id==condition_v;
     }
     return false;
 }
@@ -655,10 +761,19 @@ void Data::change_value(product_info*p,string change_c,string change_v){
         return ;
     }
 }
+void Data::change_value(message_info*p,string change_c,string change_v){
+    if(change_c=="已读位"){
+        if(change_v=="已读"){
+            p->read=1;
+            return;
+        }
+    }
+    return;
+}
 bool Data::deal_update(string table,string condition_c,string condition_v,string change_c,string change_v){
     //cout<<"start deal update"<<endl;
     //cout<<condition_c<<'\t'<<condition_v<<endl;
-    cout<<change_c<<'\t'<<change_v<<endl;
+    //cout<<change_c<<'\t'<<change_v<<endl;
     if(table=="user"){
         if(user_table){
             user_info*p=user_table;
@@ -685,6 +800,19 @@ bool Data::deal_update(string table,string condition_c,string condition_v,string
                 p=p->next;
             }
             change_commodity();
+        }
+    }
+    else if(table=="message"){
+        if(message_table){
+            message_info*p=message_table;
+            while(p){
+                if(cmp_condition(p,condition_c,condition_v)){
+                    change_value(p,change_c,change_v);
+                    break;
+                }
+                p=p->next;
+            }
+            change_message();
         }
     }
     return false;
@@ -855,10 +983,66 @@ bool Data::deal_select(string table,string condition_c,string condition_v,bool c
             }
         }
     }
+    else if(table=="message"){
+        bool flag=false;
+        message_info*p=message_table;
+        while(p){
+            if(!condition){
+                if(cmp_condition(p,condition_c,condition_v)){
+                    flag=true;
+                    break;
+                }
+            }
+            p=p->next;
+        }
+        p=message_table;
+        //cout<<condition_c<<" "<<condition_v<<endl;
+        //cout<<p->sender_ID<<p->content<<endl;
+        if(flag){
+            while(p){
+                if(!condition){
+                    //cout<<"check msg"<<endl;
+                    if(cmp_condition(p,condition_c,condition_v)){
+                        cout<<p->sender_ID<<"\t"<<p->content<<"\t";
+                        if(!p->read&&condition_c=="接收ID"){
+                            cout<<"NEW！";
+                            get_sql("UPDATE message SET 已读位 = 已读 WHERE 信息ID = "+p->msg_id);
+                        }
+                        else if(condition_c=="发送ID"){
+                            if(p->read)cout<<"已读";
+                            else cout<<"未读";
+                        }
+                        cout<<endl;
+                    }
+                    else{
+                        cout<<"cmp false"<<endl;
+                    }
+                }
+                p=p->next;
+            }
+        }
+        else{
+            cout<<"无消息"<<endl;
+        }
+    }
     return false;
 }
-void Data::write_back(){
-
+int Data::deal_select_count(string table,string condition_c,string condition_v,bool condition){
+    int v_count=0;
+    //cout<<"condition:"<<condition<<endl;
+    //cout<<"状态："<<message_table->read<<endl;
+    //cout<<condition_c<<" "<<condition_v<<endl;
+    if(table=="message"){
+        message_info*p=message_table;
+        while(p){
+            if(!condition){
+                if((!p->read)&&cmp_condition(p,condition_c,condition_v))v_count++;
+            }
+            p=p->next;
+        }
+        return v_count;
+    }
+    return v_count;
 }
 
 //回写数据
@@ -891,6 +1075,15 @@ void Data::add_user(user_info*p){
     else user_f<<"封禁";
     user_f.close();
 }
+void Data::add_message(message_info*p){
+    fstream message_f;
+    message_f.open("./data/message.txt",ios::app);
+    message_f<<"\n"<<p->msg_id<<","<<p->sender_ID<<","<<p->recv_Id<<",";
+    if(p->read)message_f<<"已读"<<",";
+    else message_f<<"未读"<<",";
+    message_f<<p->content;
+    message_f.close();
+}
 void Data::add_commands(string command){
     //TODO
     //get time
@@ -910,6 +1103,20 @@ void Data::change_user(){
         p=p->next;
     }
     user_f.close();
+}
+void Data::change_message(){
+    fstream msg_f;
+    msg_f.open("./data/message.txt",ios::trunc|ios::out);
+    msg_f<<"信息ID,发送ID,接收ID,已读位,信息内容";
+    message_info*p=message_table;
+    while(p){
+        msg_f<<"\n"<<p->msg_id<<","<<p->sender_ID<<","<<p->recv_Id<<",";
+        if(p->read)msg_f<<"已读"<<",";
+        else msg_f<<"未读"<<",";
+        msg_f<<p->content;
+        p=p->next;
+    }
+    msg_f.close();
 }
 void Data::change_commodity(){
     cout<<"modify commodity"<<endl;
@@ -954,6 +1161,14 @@ string Data::generate_order_id(){
 string Data::generate_charge_id(){
     string suff=to_string(charges);
     string pre="C";
+    for(int i=0;i<3-int(suff.length());i++){
+        pre+="0";
+    }
+    return pre+suff;
+}
+string Data::generate_message_id(){
+    string suff=to_string(messages);
+    string pre="S";
     for(int i=0;i<3-int(suff.length());i++){
         pre+="0";
     }

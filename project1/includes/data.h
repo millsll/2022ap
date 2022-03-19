@@ -69,18 +69,29 @@ class Data:public Caculator
         charge_info*next;
     };
 
+    //信息记录数据结构
+    struct message_info{
+        string msg_id;
+        string sender_ID;
+        string recv_Id;
+        bool read;
+        string content;
+        message_info*next;
+    };
+    
     protected:
     int users;
     int products;
     int orders;
     int charges;
+    int messages;
     private:
     string data_user_id;
     user_info*user_table;
     product_info*product_table;
     order_info*order_table;
     charge_info*charge_table;
-
+    message_info*message_table;
     //item number
     struct Item_num{
         float num;
@@ -95,11 +106,13 @@ class Data:public Caculator
     
     public:
     //接受sql指令并分析
-    bool get_sql(string sql_instr);
+    int get_sql(string sql_instr);
     int match_account(string account,string password);
     void init_user_info(string user_id);
     void load_data();
     void load_charge();
+    void load_message();
+    void unload_message();
     void unload_charge();
     void load_user_data(string user_id);
 
@@ -110,6 +123,7 @@ class Data:public Caculator
     string generate_commodity_id();
     string generate_order_id();
     string generate_charge_id();
+    string generate_message_id();
     string generate_time();
     string generate_time_s();
     product_info*get_commodity(string p_id);
@@ -127,12 +141,14 @@ class Data:public Caculator
     bool deal_delete(string table,string colum,string value);
     bool deal_update(string table,string condition_c,string condition_v,string change_c,string change_v);
     bool deal_select(string table,string condition_c,string condition_v,bool condition);
+    int deal_select_count(string table,string condition_c,string condition_v,bool condition);
 
     //functions to deal logic "="
     bool cmp_condition(user_info*p,string condition_c,string condition_v);
     bool cmp_condition(product_info*p,string condition_c,string condition_v);
     bool cmp_condition(order_info*p,string condition_c,string condition_v);
     bool cmp_condition(charge_info*p,string condition_c,string condition_v);
+    bool cmp_condition(message_info*p,string condition_c,string condition_v);
     
     //functions to deal logic "CONTAIN"
     bool contain_condition(product_info*p,string condition_c,string condition_v);
@@ -141,21 +157,24 @@ class Data:public Caculator
     //functions to change value,used by deal_update
     void change_value(product_info*p,string change_c,string change_v);
     void change_value(user_info*p,string change_c,string change_v);
+    void change_value(message_info*p,string change_c,string change_v);
 
     //insert function ,used by deal_insert
     void insert_newdata(product_info*p);
     void insert_newdata(order_info*p);
     void insert_newdata(user_info*p);
     void insert_newdata(charge_info*p);
+    void insert_newdata(message_info*p);
     
     //write back when any changes happened
-    void write_back();
     void add_order(order_info*p);
     void add_user(user_info*p);
     void change_user();
+    void change_message();
     void add_commodity(product_info*p);
     void change_commodity();
     void add_charge(charge_info*p);
+    void add_message(message_info*p);
     void add_commands(string command);
     
     //trans float to string 

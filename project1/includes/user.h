@@ -24,4 +24,12 @@ class User: private Seller,private Buyer
     void user_charge();
     //查看用户信息
     void user_search_info();
+    //消息面板
+    void user_message_interface();
+    //查看留言
+    void user_show_message();
+    //查看已发送的留言
+    void user_show_sent_message();
+    //发送留言
+    void user_send_message();
 };

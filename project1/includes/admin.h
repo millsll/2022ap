@@ -15,6 +15,8 @@ class Admin: public Data
     void admin_show_history_orders();
     void admin_show_users_list();
     void admin_block_user();
+    void admin_search_seller_order();
+    void admin_search_buyer_order();
     //using Data::Data;
     private:
 };

@@ -17,6 +17,7 @@ void Buyer::buyer_search_product(){
     cout<<"请输入商品名称：";
     string product_name;
     cin>>product_name;
+    //模糊匹配
     string instr="SELECT * FROM commodity WHERE 名称 CONTAINS "+product_name;
     if(!get_sql(instr)){
         cout<<"没有找到商品"<<endl;

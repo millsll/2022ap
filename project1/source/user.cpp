@@ -38,6 +38,13 @@ void User::user_log_in(){
         //TODO: laod uer info
         user_id=in_account;
         load_user_data(user_id);
+        //计算收到信息数,只计算未读。
+        //SELECT count(*) FROM user WHERE 接收ID = user_id
+        int unread_msg_cnt=get_sql("SELECT count(*) FROM message WHERE 接收ID = "+user_id);
+        cout<<"未读数："<<unread_msg_cnt<<endl;
+        if(unread_msg_cnt){
+            cout<<"你有"<<unread_msg_cnt<<"条未读留言"<<endl;
+        }
         //进入主界面
         //cout<<"加载成功"<<endl;
         user_interface();
@@ -47,21 +54,23 @@ void User::user_log_in(){
 void User::user_log_out(){
     //unload user data
     unload_data();
+    unload_charge();
+    unload_message();
     user_id="";
 }
 bool User::user_info_function(){
     while(1){
         cout<<"**************个人信息管理*****************"<<endl;
-        cout<<"1.查看信息 2.修改信息 3.充值 4.返回用户界面"<<endl;
+        cout<<"1.查看信息 2.修改信息 3.充值 4.我的消息 5.返回用户界面"<<endl;
         cout<<"*******************************************"<<endl;
         cout<<" 请选择功能：";
         string option;
         do{
             cin>>option;
-            if(option!="1"&&option!="2"&&option!="3"&&option!="4"){
+            if(option!="1"&&option!="2"&&option!="3"&&option!="4"&&option!="5"){
                 cout<<"选项错误，请重新选择：";
             }
-        }while(option!="1"&&option!="2"&&option!="3"&&option!="4");
+        }while(option!="1"&&option!="2"&&option!="3"&&option!="4"&&option!="5");
 
         if(option=="1"){
             //seach user_info
@@ -77,11 +86,42 @@ bool User::user_info_function(){
             user_charge();
         }
         else if(option=="4"){
+            //消息面板
+            user_message_interface();
+        }
+        else if(option=="5"){
             //跳出个人信息界面，返回用户界面
             break;
         }
     }
     return 0;
+}
+void User::user_message_interface(){
+    while(1){
+        cout<<"消息面板"<<endl;
+        cout<<"1.发送消息 2.收到消息 3.已发送的消息 4.返回上一层"<<endl;
+        cout<<"请选择功能：";
+        string option;
+        do{
+            cin>>option;
+            if(option!="1"&&option!="2"&&option!="3"&&option!="4"){
+                cout<<"选项错误，请重新选择：";
+            }
+        }while(option!="1"&&option!="2"&&option!="3"&&option!="4");
+
+        if(option=="1"){
+            user_send_message();
+        }
+        else if(option=="2"){
+            user_show_message();
+        }
+        else if(option=="3"){
+            user_show_sent_message();
+        }
+        else if(option=="4"){
+            break;
+        }
+    }
 }
 void User::user_interface(){
     while(1){
@@ -224,6 +264,31 @@ bool User::user_change_info(){
         return 1;
     }
     return 0;
+}
+void User::user_show_message(){
+    cout<<"你收到的信息如下："<<endl;
+    string instr="SELECT * FROM message WHERE 接收ID = "+user_id;
+    get_sql(instr);
+}
+void User::user_send_message(){
+    cout<<"请输入你想要发送信息的用户ID：";
+    string rcv_id;
+    cin>>rcv_id;
+    cout<<"请输入你想要发送的信息：";
+    string msg_content;
+    cin>>msg_content;
+    cout<<"确定要发送吗？(y/n)";
+    string option;
+    cin>>option;
+    if(option=="Y"||option=="y"){
+        string instr="INSERT INTO message VALUES ("+user_id+","+rcv_id+","+msg_content+")";
+        get_sql(instr);
+    }
+}
+void User::user_show_sent_message(){
+    cout<<"你已发送的信息如下："<<endl;
+    string instr="SELECT * FROM message WHERE 发送ID = "+user_id;
+    get_sql(instr);
 }
 void User::user_charge(){
     cout<<"输入你想要充值的金额：";
